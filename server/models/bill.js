@@ -1,5 +1,5 @@
 
-odule.exports = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
     const Bill = sequelize.define('Bill', {
         id: {
             allowNull: false,
@@ -13,15 +13,18 @@ odule.exports = (sequelize, DataTypes) => {
         },
         bill_date: {
             allowNull: false,
-            type: DataTypes.DATE
+            type: DataTypes.DATEONLY
         },
         due_date: {
             allowNull: false,
-            type: DataTypes.DATE
+            type: DataTypes.DATEONLY
         },
         amount_due: {
             allowNull: false,
             type: DataTypes.DOUBLE,
+            validate :{
+                min : 0.01
+            }
 
         },
         vendor: {

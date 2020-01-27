@@ -51,7 +51,7 @@ module.exports = {
                     if (res2) {
                         return Bill
                             .create({
-                                owner_id : user[0].id,
+                                owner_id: user[0].id,
                                 vendor: req.body.vendor,
                                 bill_date: req.body.bill_date,
                                 due_date: req.body.due_date,
@@ -74,5 +74,161 @@ module.exports = {
                 });
             })
             .catch((error) => res.status(400).send(error));
+    },
+
+    getBills(req, res) {
+        if (!req.headers.authorization) {
+            //if no authrization was done, return with response saying needed authorization
+            authenticationStatus(res);
+            return;
+        }
+        let authentication = req.headers.authorization.replace(/^Basic/, '');
+
+        authentication = (new Buffer(authentication, 'base64')).toString('utf8');
+        const loginInfo = authentication.split(':');
+        const uName = loginInfo[0];
+        const pswd = loginInfo[1];
+
+        console.log(`Username : ${uName} :: ${pswd}`);
+
+        return User.findAll({
+            limit: 1,
+            where: {
+                email_address: uName
+            },
+        })
+            .then((user) => {
+
+                if (user.length == 0) {
+                    return res.status(404).send({
+                        message: 'User not Found! Invalid !',
+
+                    });
+                }
+                console.log(`req.body.password : ${req.body.password} :: user[0].dataValues.password : ${user[0].dataValues.password}`)
+
+                //Check password from header authorization with the database bcrypt encrypted password
+                bcrypt.compare(pswd, user[0].dataValues.password, function (err, res2) {
+                    if (err) {
+                        return res.status(400).send({
+                            message: 'Error occured while comparing passwords.'
+                        })
+                    }
+                    if (res2) {
+
+                        return Bill
+                            .findAll({
+                                where: {
+                                    owner_id: user[0].dataValues.id
+                                }
+                            })
+                            .then((bills) => {
+                                if (bills.length == 0) {
+                                    return res.status(404).send({
+                                        message: 'Bill not found for the user!',
+
+                                    });
+                                }
+                                else {
+                                    bills.forEach(bill => {
+                                        bill.dataValues.created_ts = bill.dataValues.createdAt;
+                                        delete bill.dataValues.createdAt;
+                                        bill.dataValues.updated_ts = bill.dataValues.updatedAt;
+                                        delete bill.dataValues.updatedAt;
+                                    })
+                                    return res.status(200).send(bills);
+                                }
+                            })
+
+                    } else {
+                        return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
+                    }
+                });
+            })
+            .catch((error) => res.status(400).send(error));
+    },
+
+    getBill(req, res) {
+        if (!req.headers.authorization) {
+            //if no authrization was done, return with response saying needed authorization
+            authenticationStatus(res);
+            return;
+        }
+        let authentication = req.headers.authorization.replace(/^Basic/, '');
+
+        authentication = (new Buffer(authentication, 'base64')).toString('utf8');
+        const loginInfo = authentication.split(':');
+        const uName = loginInfo[0];
+        const pswd = loginInfo[1];
+
+        console.log(`Username : ${uName} :: ${pswd}`);
+
+        return User
+            .findAll({
+                limit: 1,
+                where: {
+                    email_address: uName
+                }
+            })
+            .then((user) => {
+
+                console.log(`User Name : ${user[0].dataValues.email_address} :: ID : ${user[0].dataValues.id}`)
+                bcrypt.compare(pswd, user[0].dataValues.password, function (err, res2) {
+
+
+
+                    if (user.length == 0) {
+                        return res.status(404).send({
+                            message: 'User not Found! Invalid !'
+                        });
+                    }
+                    console.log(`req.body.password : ${req.body.password} :: user[0].dataValues.password : ${user[0].dataValues.password}`)
+
+                    //Check password from header authorization with the database bcrypt encrypted password
+                    bcrypt.compare(pswd, user[0].dataValues.password, function (err, res2) {
+                        if (err) {
+                            return res.status(400).send({
+                                message: 'Error occured while comparing passwords.'
+                            })
+                        }
+                        if (res2) {
+                            return Bill
+                                .findAll({
+                                    limit: 1,
+                                    where: {
+                                        id: req.params.id
+                                    }
+                                })
+                                .then((bills) => {
+
+                                    console.log(`User Name : ${user[0].dataValues.email_address} :: ID : ${user[0].dataValues.id}`);
+                                    if (bills.length == 0) {
+                                        return res.status(404).send({
+                                            message: 'Bill not found for the user!',
+                                        });
+                                    }
+                                    else if (bills[0].owner_id != user[0].dataValues.id) {
+                                        return res.status(401).send({
+                                            message: 'You are not authorized to view this bill!',
+                                        });
+                                    }
+                                    else {
+                                        return res.status(200).send(bills[0]);
+                                    }
+                                })
+                                .catch((e) => {
+                                    return res.status(400).send(e);
+                                });
+
+                        } else {
+                            return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
+                        }
+                    });
+                })
+            })
+            .catch((error) => {
+                res.status(400).send(error);
+                console.log("hfagsdkjlfadsfvbljvkhkadlsjkvbjdnlsakjbvnx");
+            });
     }
 }

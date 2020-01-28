@@ -2,6 +2,9 @@ const Bill = require('../models').Bill;
 const User = require('../models').User;
 const { validationResult } = require('express-validator');
 const authenticationStatus = require("./usersController").authenticationStatus;
+const moment = require('moment');
+
+moment.suppressDeprecationWarnings = true;
 //  Bcrypt
 
 const bcrypt = require(`bcrypt`);

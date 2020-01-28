@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "./node_modules/.bin/nodemon ./bin/www -w assignment2.js -w server",
-    "test": "mocha"
+    "start": "./node_modules/.bin/nodemon ./bin/www -w assignmentServer.js -w server",
+    "test": "mocha --exit"
   },
   "keywords": [],
   "author": "",

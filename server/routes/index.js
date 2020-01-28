@@ -1,6 +1,7 @@
 const userController = require('../controllers').users;
+const billController = require('../controllers').bills;
 const { check } = require('express-validator');
-
+const {body} = require('express-validator');
 
 module.exports = (app) => {
   app.get('/v1', (req, res) => res.status(200).send({
@@ -13,4 +14,28 @@ module.exports = (app) => {
   
   app.post('/v1/user', [check('email_address').exists().isEmail(), check('first_name').exists().isLength({min: 1, max: 100}), 
       check('last_name').exists().isLength({min:1, max:100}), check('password').exists()], userController.create);
+      
+      
+  app.get('/v1/bills', billController.getBills);
+  app.get('/v1/bill/:id',billController.getBill);
+  app.put('/v1/bill/:id',body('paymentStatus').custom((value, { req }) => {
+    
+    if (value !== "paid" && value !== "due" && value !== "past_due" && value !== "no_payment_required")  {
+      throw new Error(`Payment Status must be 'paid', 'due', 'past_due' or 'no_payment_required'`);
+    }
+    return true;
+  }),[check('vendor').exists(),check('bill_date').exists(),check('due_date').exists(),
+  check('amount_due').exists().isNumeric(),check('categories').exists().isArray()], billController.updateBill);
+  app.delete('/v1/bill/:id', billController.deleteBill);
+     app.post('/v1/bill',body('paymentStatus').custom((value, { req }) => {
+      
+      if (value !== "paid" && value !== "due" && value !== "past_due" && value !== "no_payment_required")  {
+        throw new Error(`Payment Status must be 'paid', 'due', 'past_due' or 'no_payment_required'`);
+      }
+      return true;
+    }),[check('vendor').exists(),check('bill_date').exists(),check('due_date').exists(),
+         check('amount_due').exists().isNumeric(),check('categories').exists().isArray()], billController.createBill);
+
+
+
 };

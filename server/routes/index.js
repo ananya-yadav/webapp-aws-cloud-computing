@@ -18,8 +18,9 @@ module.exports = (app) => {
       
   app.get('/v1/bills', billController.getBills);
   app.get('/v1/bill/:id',billController.getBill);
-  // app.put('/v1/bills/{id}', billController.updateBill);
-  // app.delete('/v1/bills/{id}', billController.deleteBill);
+  app.put('/v1/bill/:id',[check('vendor').exists(),check('bill_date').exists(),check('due_date').exists(),
+  check('amount_due').exists(),check('categories').exists()], billController.updateBill);
+  app.delete('/v1/bill/:id', billController.deleteBill);
      app.post('/v1/bill',[check('vendor').exists(),check('bill_date').exists(),check('due_date').exists(),
          check('amount_due').exists(),check('categories').exists()], billController.createBill);
 

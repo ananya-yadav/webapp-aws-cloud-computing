@@ -15,10 +15,12 @@ module.exports = (sequelize, DataTypes) => {
         },
         bill_date: {
             allowNull: false,
+            validate:{isDate:true},
             type: DataTypes.DATEONLY
         },
         due_date: {
             allowNull: false,
+            validate:{isDate:true},
             type: DataTypes.DATEONLY
         },
         amount_due: {

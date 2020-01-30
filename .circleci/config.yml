@@ -5,8 +5,15 @@ jobs: # a collection of steps
     working_directory: ~/webapp # directory where steps will run
     docker: # run the steps with Docker
       - image: circleci/node:10.16.3 # ...with this image as the primary container; this is where all `steps` will run
+      - image: circleci/postgres:9.6.2-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: assignments
+          POSTGRES_PASSWORD: Neuananya@17
     steps: # a collection of executable commands
       - checkout # special step to check out source code to working directory
+
+      - run: mkdir ~/junit
       - run:
           name: update-npm
           command: 'sudo npm install -g npm@latest'
@@ -21,6 +28,21 @@ jobs: # a collection of steps
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
+      - run: sudo npm install -g sequelize-cli
+      - run:
+          name: Database Setup
+          command: sequelize db:migrate
+          
+      - run: # run tests
+          name: test
+          command: npm test
+          environment:
+            MOCHA_FILE: ~/junit/test-results.xml
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junits
 
   pr_check: # runs not using Workflows must have a `build` job as entry point
     working_directory: ~/webapp # directory where steps will run
@@ -70,7 +92,10 @@ workflows:
   version: 2
   pr-check-workflow:
     jobs:
-    - build
-    - pr_check:
-        requires:
-          - build
+    - pr_check
+  build-deploy-workflow:
+    jobs:
+    - build:
+        filters:
+          branches:
+            only: master

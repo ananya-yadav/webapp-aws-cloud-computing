@@ -6,7 +6,7 @@ var request = supertestChai.request;
 var expect = chai.expect;
 var should = chai.should();
 chai.use(supertestChai.httpAsserts);
-let CreateBill = "";
+let newBillId = "";
 
 
 
@@ -26,7 +26,6 @@ describe("User Test Route", function () {
             .send(payload)
             .end(function (err, res) {
                 if (err) done(err);
-                newUserId = res.body.id;
                 res.should.have.status(201);
                 res.body.should.be.a("object");
                 done();
@@ -196,7 +195,7 @@ describe("put/v1/bill/:id", function () {
             .send(payload)
             .end(function (err, res) {
                 if (err) done(err);
-                res.should.have.status(200);
+                res.should.have.status(204);
                 res.body.should.be.a("object");
                 done();
             });

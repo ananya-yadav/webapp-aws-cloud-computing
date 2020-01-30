@@ -6,6 +6,9 @@ var request = supertestChai.request;
 var expect = chai.expect;
 var should = chai.should();
 chai.use(supertestChai.httpAsserts);
+let CreateBill = "";
+
+
 
 describe("User Test Route", function () {
     describe("POST /v1/user", function () {
@@ -111,7 +114,7 @@ describe("put/v1/user/self", function () {
                 var server = app.listen();
                 request(server)
                     .get("/v1/bills")
-                    .auth('test_new@gmail.com', 'Ananya@18')
+                    .auth('test1_new@gmail.com', 'Ananya@18')
 
                     .end(function (err, res) {
                         if (err) done(err);
@@ -127,7 +130,7 @@ describe("put/v1/user/self", function () {
     });
 describe("put/v1/bill/:id", function () {
 
-    it("should not update the bill by diffrent user", function (done) {
+    it("should not create the bill by diffrent user", function (done) {
         var payload = {
             vendor: "NEU University",
             bill_date: "2020-01-06",
@@ -143,13 +146,14 @@ describe("put/v1/bill/:id", function () {
         };
         var server = app.listen();
         request(server)
-            .put("/v1/bill/:id")
-            .auth('test@gmail.com','Ananya@18')
-            .match('6364b686-406a-4838-94fb-4ce129859790')
+        .put(`/v1/bill/:id`)
+            .auth('test1_new@gmail.com','Ananya@18')
+            
             .send(payload)
             .end(function (err, res) {
                 if (err) done(err);
-                res.should.have.status(401);
+                newCreateBill = res.body.id;
+                res.should.have.status(400);
                 res.body.should.be.a("object");
                 done();
 

@@ -150,6 +150,11 @@ module.exports = {
             message: 'User Not Found! Invalid Username!',
           });
         }
+        if(uName != req.body.email_address){
+          return res.status(400).send({
+            message: 'Cannot change your email_address.'
+          })
+        }
         console.log(`req.body.password : ${req.body.password} :: user[0].dataValues.password : ${user[0].dataValues.password}`)
         bcrypt.compare(pswd, user[0].dataValues.password, function (err, res2) {
           if (err) {

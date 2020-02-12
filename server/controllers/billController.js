@@ -236,6 +236,14 @@ module.exports = {
                                     return res.status(200).send(bills[0]);
                                 }
                             })
+                            .catch((err1) => {
+                                if (err1.parent.file == "uuid.c") {
+                                    res.status(400).send({
+                                        message: "Invalid File Id type: UUID/V4 Passed!"
+                                    })
+                                }
+                                return res.status(400).send(err1);
+                            })
 
                     } else {
                         return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });

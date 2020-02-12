@@ -1,5 +1,7 @@
 const Bill = require('../models').Bill;
 const User = require('../models').User;
+const File = require('../models').File;
+const fs = require('fs');
 const { validationResult } = require('express-validator');
 const authenticationStatus = require("./usersController").authenticationStatus;
 const moment = require('moment');
@@ -15,19 +17,19 @@ module.exports = {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        if(req.body.owner_id != undefined || req.body.owner_id != null ){
+        if (req.body.owner_id != undefined || req.body.owner_id != null) {
             return res.status(400).send({
-                message : "You cannot update bill's owner id!"
+                message: "You cannot update bill's owner id!"
             })
         }
-        if(req.body.created_ts != undefined || req.body.created_ts != null || req.body.createdAt != undefined || req.body.createdAt != null ){
+        if (req.body.created_ts != undefined || req.body.created_ts != null || req.body.createdAt != undefined || req.body.createdAt != null) {
             return res.status(400).send({
-                message : "You cannot update bill's created date and time!"
+                message: "You cannot update bill's created date and time!"
             })
         }
-        if(req.body.updated_ts != undefined || req.body.updated_ts != null || req.body.updatedAt != undefined || req.body.updatedAt != null ){
+        if (req.body.updated_ts != undefined || req.body.updated_ts != null || req.body.updatedAt != undefined || req.body.updatedAt != null) {
             return res.status(400).send({
-                message : "You cannot uodate bill's update date and time!"
+                message: "You cannot uodate bill's update date and time!"
             })
         }
 
@@ -248,19 +250,19 @@ module.exports = {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        if(req.body.owner_id != undefined || req.body.owner_id != null ){
+        if (req.body.owner_id != undefined || req.body.owner_id != null) {
             return res.status(400).send({
-                message : "You cannot update bill's owner id!"
+                message: "You cannot update bill's owner id!"
             })
         }
-        if(req.body.created_ts != undefined || req.body.created_ts != null || req.body.createdAt != undefined || req.body.createdAt != null ){
+        if (req.body.created_ts != undefined || req.body.created_ts != null || req.body.createdAt != undefined || req.body.createdAt != null) {
             return res.status(400).send({
-                message : "You cannot update bill's created date and time!"
+                message: "You cannot update bill's created date and time!"
             })
         }
-        if(req.body.updated_ts != undefined || req.body.updated_ts != null || req.body.updatedAt != undefined || req.body.updatedAt != null ){
+        if (req.body.updated_ts != undefined || req.body.updated_ts != null || req.body.updatedAt != undefined || req.body.updatedAt != null) {
             return res.status(400).send({
-                message : "You cannot uodate bill's update date and time!"
+                message: "You cannot uodate bill's update date and time!"
             })
         }
         if (!req.headers.authorization) {
@@ -408,26 +410,43 @@ module.exports = {
                                 else if (bills[0].dataValues.owner_id != user[0].dataValues.id) {
                                     return res.status(401).send({
                                         message: 'Unauthorized to delete this bill!'
-                                    });
+                                    })
                                 }
-                                else {
-
-                                    return Bill
-                                        .destroy({
+                                if (bills[0].dataValues.attachment != null) {
+                                    File
+                                        .findAll({
                                             where: {
-                                                id: req.params.id
+                                                id: bills[0].dataValues.attachment
                                             }
                                         })
-                                        .then((rowDeleted) => {
-                                            if (rowDeleted === 1) {
-                                                res.status(204).send('Deleted successfully');
-                                            }
-                                        })
-                                        .catch((e) => res.status(400).send({
-                                            message: "Some Error Occured While Deleting!",
-                                            error: e
-                                        }))
+                                        .then((files) => {
+                                            fs.unlink(files[0].dataValues.url, function (err) {
+                                                File
+                                                    .destroy({
+                                                        where: {
+                                                            id: bills[0].dataValues.attachment
+                                                        }
+                                                    })
+                                            })
+                                        });
                                 }
+
+                                return Bill
+                                    .destroy({
+                                        where: {
+                                            id: req.params.id
+                                        }
+                                    })
+                                    .then((rowDeleted) => {
+                                        if (rowDeleted === 1) {
+                                            res.status(204).send('Deleted successfully');
+                                        }
+                                    })
+                                    .catch((e) => res.status(400).send({
+                                        message: "Some Error Occured While Deleting!",
+                                        error: e
+                                    }))
+
                             })
                             .catch((error) => res.status(400).send({
                                 message: "Bill not found!"

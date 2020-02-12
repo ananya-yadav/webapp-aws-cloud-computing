@@ -41,6 +41,14 @@
         paymentStatus: {
             type: Sequelize.ENUM('paid', 'due', 'past_due', 'no_payment_required')
         },
+        attachment:{
+          type:Sequelize.UUID,
+          references:{
+              model:'Files',
+              key:'id'
+          }
+      }
+      
       }),
     down: (queryInterface /* , Sequelize */) => queryInterface.dropTable('Bills'),
   };

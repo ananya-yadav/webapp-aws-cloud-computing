@@ -27,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
       md5:{
         type: DataTypes.STRING
       }
+    }, {
+      defaultScope : {
+        attributes: { exclude: ['size', 'md5', 'fileOwner', 'createdAt', 'updatedAt'] },
+      }
     });
     return File;
   };

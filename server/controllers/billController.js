@@ -5,6 +5,7 @@ const fs = require('fs');
 const { validationResult } = require('express-validator');
 const authenticationStatus = require("./usersController").authenticationStatus;
 const moment = require('moment');
+Bill.hasOne(File, { foreignKey: 'bill', onDelete: 'CASCADE' });
 
 moment.suppressDeprecationWarnings = true;
 //  Bcrypt
@@ -115,7 +116,8 @@ module.exports = {
             limit: 1,
             where: {
                 email_address: uName
-            },
+            }
+
         })
             .then((user) => {
 
@@ -140,9 +142,12 @@ module.exports = {
                             .findAll({
                                 where: {
                                     owner_id: user[0].dataValues.id
-                                }
+                                },
+                                include: File
+
                             })
                             .then((bills) => {
+                                console.log("gvjhkjaslzdvkxhbjzlSCZHvk-----------------------------------")
                                 if (bills.length == 0) {
                                     return res.status(404).send({
                                         message: 'Bill not found for the user!',
@@ -151,10 +156,15 @@ module.exports = {
                                 }
                                 else {
                                     bills.forEach(bill => {
+                                        bill.dataValues.attachment = bill.dataValues.File;
+                                        delete bill.dataValues.File;
                                         bill.dataValues.created_ts = bill.dataValues.createdAt;
                                         delete bill.dataValues.createdAt;
                                         bill.dataValues.updated_ts = bill.dataValues.updatedAt;
                                         delete bill.dataValues.updatedAt;
+                                        if(bill.dataValues.attachment!=null)
+                                            delete bill.dataValues.attachment.dataValues.bill;
+
                                     })
                                     return res.status(200).send(bills);
                                 }
@@ -212,7 +222,9 @@ module.exports = {
                             .findAll({
                                 where: {
                                     id: req.params.id
-                                }
+                                },
+
+                                include: File
                             })
                             .then((bills) => {
                                 if (bills.length == 0) {
@@ -227,12 +239,14 @@ module.exports = {
                                     });
                                 }
                                 else {
-
+                                    bills[0].dataValues.attachment = bills[0].dataValues.File;
+                                    delete bills[0].dataValues.File;
                                     bills[0].dataValues.created_ts = bills[0].dataValues.createdAt;
                                     delete bills[0].dataValues.createdAt;
                                     bills[0].dataValues.updated_ts = bills[0].dataValues.updatedAt;
                                     delete bills[0].dataValues.updatedAt;
-
+                                    if(bills[0].dataValues.attachment!=null)
+                                        delete bills[0].dataValues.attachment.dataValues.bill;
                                     return res.status(200).send(bills[0]);
                                 }
                             })

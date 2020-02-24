@@ -1,12 +1,13 @@
-
-const Bill = require('../models').Bill;
-const User = require('../models').User;
-const File = require('../models').File;
+const Bill = require("../models/bill").Bill;
+const File = require("../models/fileModel").Files;
+const User = require('../models/userModel').User;
 const moment = require('moment');
 const fs = require('fs');
 const md5File = require('md5-file');
 
 moment.suppressDeprecationWarnings = true;
+
+const uuidv4 = require('uuid/v4');
 
 const path = require('path');
 
@@ -88,6 +89,7 @@ module.exports = {
                                     else {
                                         return File
                                             .create({
+                                                id: uuidv4(),
                                                 file_name: req.file.filename,
                                                 url: `public/uploads/${req.file.filename}`,
                                                 upload_date: new Date(),

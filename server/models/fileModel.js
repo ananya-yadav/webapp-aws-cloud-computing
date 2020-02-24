@@ -1,36 +1,33 @@
-module.exports = (sequelize, DataTypes) => {
-    const File = sequelize.define('File', {
-      id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
-      file_name: {
-        type: DataTypes.STRING
-      },
-      url: {
-        type: DataTypes.STRING
-      },
-      upload_date: {
-        type: DataTypes.DATEONLY
-      },
-      size: {
-        type: DataTypes.DOUBLE
-      },
-      fileOwner:{
-        type: DataTypes.STRING
-      },
-      bill:{
-        type: DataTypes.UUID
-      },
-      md5:{
-        type: DataTypes.STRING
-      }
-    }, {
-      defaultScope : {
-        attributes: { exclude: ['size', 'md5', 'fileOwner', 'createdAt', 'updatedAt'] },
-      }
-    });
-    return File;
-  };
+const Sequelize = require('sequelize');
+const sequelize = require("../config/postgres.js").sequelize;
+var Files = sequelize.define('attachments', {
+  id: {
+    allowNull: false,
+    type: Sequelize.UUID,
+    primaryKey: true
+  },
+  bill: {
+    type: Sequelize.UUID
+  },
+  file_name: {
+    type: Sequelize.STRING
+  },
+  url: {
+    type: Sequelize.STRING
+  },
+  md5: {
+    type: Sequelize.STRING
+  },
+  size: {
+    type: Sequelize.INTEGER
+  }
+},
+  {
+    timestamps: true,
+    updatedAt: false,
+    createdAt: 'upload_date'
+  });
+sequelize.sync();
+module.exports = {
+  Files
+}

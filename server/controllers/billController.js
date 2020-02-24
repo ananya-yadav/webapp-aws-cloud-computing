@@ -1,6 +1,6 @@
-const Bill = require('../models').Bill;
-const User = require('../models').User;
-const File = require('../models').File;
+const Bill = require("../models/bill").Bill;
+const File = require("../models/fileModel").Files;
+const User = require('../models/userModel').User;
 const fs = require('fs');
 const { validationResult } = require('express-validator');
 const authenticationStatus = require("./usersController").authenticationStatus;
@@ -11,6 +11,8 @@ moment.suppressDeprecationWarnings = true;
 //  Bcrypt
 
 const bcrypt = require(`bcrypt`);
+
+const uuidv4 = require('uuid/v4');
 
 module.exports = {
     createBill(req, res) {
@@ -70,16 +72,11 @@ module.exports = {
                         })
                     }
                     if (res2) {
+                        billData = req.body;
+                        billData.id = uuidv4();
+                        billData.owner_id = user[0].id;
                         return Bill
-                            .create({
-                                owner_id: user[0].id,
-                                vendor: req.body.vendor,
-                                bill_date: req.body.bill_date,
-                                due_date: req.body.due_date,
-                                amount_due: req.body.amount_due,
-                                categories: req.body.categories,
-                                paymentStatus: req.body.paymentStatus
-                            })
+                            .create(billData)
                             .then((bill) => {
                                 bill.dataValues.created_ts = bill.dataValues.createdAt;
                                 delete bill.dataValues.createdAt;
@@ -162,7 +159,7 @@ module.exports = {
                                         delete bill.dataValues.createdAt;
                                         bill.dataValues.updated_ts = bill.dataValues.updatedAt;
                                         delete bill.dataValues.updatedAt;
-                                        if(bill.dataValues.attachment!=null)
+                                        if (bill.dataValues.attachment != null)
                                             delete bill.dataValues.attachment.dataValues.bill;
 
                                     })
@@ -245,7 +242,7 @@ module.exports = {
                                     delete bills[0].dataValues.createdAt;
                                     bills[0].dataValues.updated_ts = bills[0].dataValues.updatedAt;
                                     delete bills[0].dataValues.updatedAt;
-                                    if(bills[0].dataValues.attachment!=null)
+                                    if (bills[0].dataValues.attachment != null)
                                         delete bills[0].dataValues.attachment.dataValues.bill;
                                     return res.status(200).send(bills[0]);
                                 }

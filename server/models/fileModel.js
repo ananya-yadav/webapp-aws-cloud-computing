@@ -20,7 +20,12 @@ var Files = sequelize.define('attachments', {
   },
   size: {
     type: Sequelize.INTEGER
+  },
+
+  key: {
+    type: Sequelize.STRING
   }
+
 },
   {
     timestamps: true,

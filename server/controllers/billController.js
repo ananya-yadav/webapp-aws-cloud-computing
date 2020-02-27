@@ -153,14 +153,18 @@ module.exports = {
                                 }
                                 else {
                                     bills.forEach(bill => {
-                                        bill.dataValues.attachment = bill.dataValues.File;
-                                        delete bill.dataValues.File;
                                         bill.dataValues.created_ts = bill.dataValues.createdAt;
                                         delete bill.dataValues.createdAt;
                                         bill.dataValues.updated_ts = bill.dataValues.updatedAt;
                                         delete bill.dataValues.updatedAt;
-                                        if (bill.dataValues.attachment != null)
+                                        if (bill.dataValues.attachment != null){
+                                            delete bill.dataValues.attachment.dataValues.size;
                                             delete bill.dataValues.attachment.dataValues.bill;
+                                            delete bill.dataValues.attachment.dataValues.md5;
+                                        }else{
+                                            bill.dataValues.attachment = null;
+       
+                                           }
 
                                     })
                                     return res.status(200).send(bills);
@@ -236,14 +240,19 @@ module.exports = {
                                     });
                                 }
                                 else {
-                                    bills[0].dataValues.attachment = bills[0].dataValues.File;
-                                    delete bills[0].dataValues.File;
                                     bills[0].dataValues.created_ts = bills[0].dataValues.createdAt;
                                     delete bills[0].dataValues.createdAt;
                                     bills[0].dataValues.updated_ts = bills[0].dataValues.updatedAt;
                                     delete bills[0].dataValues.updatedAt;
-                                    if (bills[0].dataValues.attachment != null)
+                                    if (bills[0].dataValues.attachment != null){
+                                        delete bills[0].dataValues.attachment.dataValues.md5;
+                                        delete bills[0].dataValues.attachment.dataValues.size;
                                         delete bills[0].dataValues.attachment.dataValues.bill;
+                                    }
+                                    else{
+                                     bills[0].dataValues.attachment = null;
+
+                                    }
                                     return res.status(200).send(bills[0]);
                                 }
                             })

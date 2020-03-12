@@ -1,0 +1,16 @@
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /home/ubuntu
+
+hooks:
+  AfterInstall:
+    - location: /scripts/afterInstall.sh
+      timeout: 200
+      runas: ubuntu
+  ApplicationStart:
+    - location: /scripts/appStart.sh
+      timeout: 200
+      runas: ubuntu

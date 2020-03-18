@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
 });
 const uploadS3 = multer({
     fileFilter: function (req, file, callback) {
-        var ext = path.extname(file.originalname);
+        let ext = path.extname(file.originalname);
         if (ext !== '.png' && ext !== '.jpg' && ext !== '.pdf' && ext !== '.jpeg') {
             return callback({ "Error": "Only pdfs & images are allowed" }, false);
         }
@@ -65,7 +65,7 @@ const uploadS3 = multer({
 const upload = multer({
     storage: storage,
     fileFilter: function (req, file, callback) {
-        var ext = path.extname(file.originalname);
+        let ext = path.extname(file.originalname);
         if (ext !== '.png' && ext !== '.jpg' && ext !== '.pdf' && ext !== '.jpeg') {
             return callback({ "Error": "Only pdfs & images are allowed" }, false);
         }
@@ -86,7 +86,7 @@ module.exports = {
     createFile(req, res) {
         LOGGER.info("FILE IS BEING CREATED");
         sdc.increment('Create_file');
-        var sDate = new Date();
+        let sDate = new Date();
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -122,22 +122,15 @@ module.exports = {
                         })
                     }
                     else {
-
+                        let sd1 = new Date();
                         uploadS3(req, res, function (err) {
-
-                            console.log("-----------------------------------------------------------------------------------");
-                            console.log("-----------------------------------------------------------------------------------");
-                            console.log(" Testing enter in uploadS3 method");
-                            console.log(req.file);
-                            console.log("-----------------------------------------------------------------------------------");
-                            console.log("-----------------------------------------------------------------------------------");
-                            console.log("Bucket -> " + bucket);
-
-                            console.log("-----------------------------------------------------------------------------------");
-                            console.log("-----------------------------------------------------------------------------------");
+                            let ed1 = new Date();
+                            let ms1 = (ed1.getTime() - sd1.getTime());
+                            sdc.timing('create_file_upload_to_S3_Time', ms1);
                             if (err) {
                                 return res.status(400).send(err);
                             } else {
+                                let sd2 = new Date();
                                 return File
                                     .create({
                                         id: uuidv4(),
@@ -151,6 +144,9 @@ module.exports = {
                                         key: req.file.key
                                     })
                                     .then((file) => {
+                                        let ed2 = new Date();
+                                        let ms2 = (ed2.getTime() - sd2.getTime());
+                                        sdc.timing('create_file_DBQuery_Time', ms2);
                                         delete file.dataValues.createdAt;
                                         delete file.dataValues.updatedAt;
                                         delete file.dataValues.fileOwner;
@@ -158,9 +154,6 @@ module.exports = {
                                         delete file.dataValues.bill;
                                         delete file.dataValues.key;
                                         delete file.dataValues.md5;
-                                        var eDate = new Date();
-                                        var miliseconds = (eDate.getTime() - sDate.getTime());
-                                        sdc.timing('create_file_api-time', miliseconds);
                                         Bill
                                             .update(
                                                 { attachment: file.dataValues.id },
@@ -170,6 +163,9 @@ module.exports = {
                                                     }
                                                 }
                                             )
+                                        let eDate = new Date();
+                                        let miliseconds = (eDate.getTime() - sDate.getTime());
+                                        sdc.timing('create_file_api_time', miliseconds);
                                         res.status(201).send(file);
                                     })
                                     .catch((error) => {
@@ -206,7 +202,7 @@ module.exports = {
     getFile(req, res) {
         LOGGER.info("Access the file");
         sdc.increment('get_file');
-        var sDate1 = new Date();
+        let sDate1 = new Date();
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -236,6 +232,7 @@ module.exports = {
                         })
                     }
                     else {
+                        let sd3 = new Date();
                         return File
                             .findAll({
                                 where: {
@@ -243,6 +240,9 @@ module.exports = {
                                 }
                             })
                             .then((file) => {
+                                let ed3 = new Date();
+                                let ms3 = (ed3.getTime() - sd3.getTime());
+                                sdc.timing('get_file_DBQuery_time', ms3);
                                 LOGGER.info("GETTING THE FILE !!");
                                 if (file.length == 0) {
                                     return res.status(404).send({
@@ -261,9 +261,9 @@ module.exports = {
                                 delete file[0].dataValues.key;
                                 delete file[0].dataValues.bill;
                                 delete file[0].dataValues.md5;
-                                var eDate1 = new Date();
-                                var miliseconds1 = (eDate1.getTime() - sDate1.getTime());
-                                sdc.timing('get_file_api-time', miliseconds1);
+                                let eDate1 = new Date();
+                                let miliseconds1 = (eDate1.getTime() - sDate1.getTime());
+                                sdc.timing('get_file_api_time', miliseconds1);
                                 res.status(200).send(file[0]);
                             })
                             .catch((error) => {
@@ -301,7 +301,7 @@ module.exports = {
     deleteFile(req, res) {
         LOGGER.info("DELETING THE FILE");
         sdc.increment('delete_file');
-        var sDate2 = new Date();
+        let sDate2 = new Date();
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -346,9 +346,6 @@ module.exports = {
                                         }
                                     })
                                     .then((file) => {
-                                        var eDate2 = new Date();
-                                        var miliseconds2 = (eDate2.getTime() - sDate2.getTime());
-                                        sdc.timing('delete_file_api-time', miliseconds2);
 
                                         if (file.length == 0) {
                                             return res.status(404).send({
@@ -360,32 +357,35 @@ module.exports = {
                                                 message: "File for this Bill Not Found!"
                                             })
                                         }
-                                        var sDate3 = new Date();
+                                        let sDate3 = new Date();
                                         s3.deleteObject({
                                             Bucket: bucket,
                                             Key: file[0].key
                                         }, function (err09) {
-                                            var eDate3 = new Date();
-                                            var miliseconds3 = (eDate3.getTime() - sDate3.getTime());
-                                            sdc.timing('delete_file_api-time', miliseconds3);
+                                            let eDate3 = new Date();
+                                            let miliseconds3 = (eDate3.getTime() - sDate3.getTime());
+                                            sdc.timing('delete_file_S3Delete_time', miliseconds3);
                                             if (err09) {
                                                 return res.status(400).send({
                                                     message: "Error while deleting from S3!"
                                                 })
                                             } else {
-                                                var sDate4 = new Date();
-                                                return File                  
+                                                let sDate4 = new Date();
+                                                return File
                                                     .destroy({
                                                         where: {
                                                             id: req.params.fileId
                                                         }
                                                     })
                                                     .then((rowDeleted) => {
-                                                        var eDate4 = new Date();
-                                                        var miliseconds4 = (eDate4.getTime() - sDate4.getTime());
-                                                        sdc.timing('delete_file_api-time', miliseconds4);
+                                                        let eDate4 = new Date();
+                                                        let miliseconds4 = (eDate4.getTime() - sDate4.getTime());
+                                                        sdc.timing('delete_file_DBQuery_time', miliseconds4);
                                                         if (rowDeleted === 1) {
                                                             LOGGER.info("FILE DELETED");
+                                                            let eDate2 = new Date();
+                                                            let miliseconds2 = (eDate2.getTime() - sDate2.getTime());
+                                                            sdc.timing('delete_file_api_time', miliseconds2);
                                                             res.status(204).send('Deleted successfully');
                                                         }
                                                     })

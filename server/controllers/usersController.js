@@ -12,7 +12,7 @@ const bcrypt = require(`bcrypt`);
 module.exports = {
   create(req, res) {
     sdc.increment('CREATE_USER');
-    var sDate15 = new Date();
+    let sDate15 = new Date();
     LOGGER.info("CREATING USER");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -38,6 +38,7 @@ module.exports = {
         let flag = passwordCheck(res, password);
 
         if (!flag) {
+          let sd1 = new Date();
           return User
             .create({
               id: uuidv4(),
@@ -47,14 +48,17 @@ module.exports = {
               password: PassCodeBcrypt
             })
             .then((user) => {
+              let ed1 = new Date();
+              let ms1 = (ed1.getTime() - sd1.getTime());
+              sdc.timing('create_user_DBQuery_time', ms1);
               delete user.dataValues.password;
               user.dataValues.account_created = user.dataValues.createdAt;
               delete user.dataValues.createdAt;
               user.dataValues.account_updated = user.dataValues.updatedAt;
               delete user.dataValues.updatedAt;
-              var eDate15 = new Date();
-              var miliseconds15 = (eDate15.getTime() - sDate15.getTime());
-              sdc.timing('CREATE_USER', miliseconds15);
+              let eDate15 = new Date();
+              let miliseconds15 = (eDate15.getTime() - sDate15.getTime());
+              sdc.timing('create_user_api_time', miliseconds15);
 
               LOGGER.info("USER HAS BEEN CREATED");
               res.status(201).send(user)
@@ -74,7 +78,7 @@ module.exports = {
 
   getUser(req, res) {
     sdc.increment('GET_USER');
-    var sDate16 = new Date();
+    let sDate16 = new Date();
     LOGGER.info("GET USERS BY SPECIFIC ID");
     // req -> Request Object -> Headers -> Basic Auth with Username & Password -> req.headers.authorization
     // Eg : Basic bsifhdjasz#shbdfiIUHQUhnjdaj123
@@ -102,9 +106,6 @@ module.exports = {
       },
     })
       .then((user) => {
-        var eDate16 = new Date();
-        var miliseconds16 = (eDate16.getTime() - sDate16.getTime());
-        sdc.timing('GET_USER', miliseconds16);
 
         if (user.length == 0) {
           return res.status(404).send({
@@ -130,6 +131,9 @@ module.exports = {
             delete user[0].dataValues.updatedAt;
             LOGGER.info("GET USER");
 
+            let eDate16 = new Date();
+            let miliseconds16 = (eDate16.getTime() - sDate16.getTime());
+            sdc.timing('get_user_api_time', miliseconds16);
             return res.status(200).send(user[0]);
 
           } else {
@@ -150,7 +154,7 @@ module.exports = {
 
   update(req, res) {
     sdc.increment('UPDATE_USER');
-    var sDate17 = new Date();
+    let sDate17 = new Date();
     LOGGER.info("USER BEING UPDATED");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -211,8 +215,8 @@ module.exports = {
                       where: { email_address: uName }
                     })
                   .then((user) => {
-                    var eDate17 = new Date();
-                    var miliseconds17 = (eDate17.getTime() - sDate17.getTime());
+                    let eDate17 = new Date();
+                    let miliseconds17 = (eDate17.getTime() - sDate17.getTime());
                     sdc.timing('UPDATE_USER', miliseconds17);
                     LOGGER.info("USER UPDATED");
                     res.status(204).send("Updated Successfully!");

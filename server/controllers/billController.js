@@ -26,7 +26,7 @@ const sdc = new SDC({ host: 'localhost', port: 8125 });
 module.exports = {
     createBill(req, res) {
         sdc.increment('create_bill');
-        var sDate8 = new Date();
+        let sDate8 = new Date();
         LOGGER.info("BILL IS BEING CREATED")
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -76,7 +76,7 @@ module.exports = {
                     return res.status(404).send({
                         message: 'User Not Found! Invalid Username!',
                     });
-                } 
+                }
                 console.log(`req.body.password : ${req.body.password} :: user[0].dataValues.password : ${user[0].dataValues.password}`)
                 bcrypt.compare(pswd, user[0].dataValues.password, function (err, res2) {
                     if (err) {
@@ -88,15 +88,19 @@ module.exports = {
                         billData = req.body;
                         billData.id = uuidv4();
                         billData.owner_id = user[0].id;
+                        let sD1 = new Date();
                         return Bill
                             .create(billData)
                             .then((bill) => {
+                                let eD1 = new Date();
+                                let miliseconds1 = (eD1.getTime() - sD1.getTime());
+                                sdc.timing('create_bill_DBQuery_time', miliseconds1);
                                 bill.dataValues.created_ts = bill.dataValues.createdAt;
                                 delete bill.dataValues.createdAt;
                                 bill.dataValues.updated_ts = bill.dataValues.updatedAt;
                                 delete bill.dataValues.updatedAt;
-                                var eDate8 = new Date();
-                                var miliseconds8 = (eDate8.getTime() - sDate8.getTime());
+                                let eDate8 = new Date();
+                                let miliseconds8 = (eDate8.getTime() - sDate8.getTime());
                                 sdc.timing('create_bill_api_time', miliseconds8);
                                 res.status(201).send(bill)
                             })
@@ -112,7 +116,7 @@ module.exports = {
 
     getBills(req, res) {
         sdc.increment('get_bill');
-        var sDate5 = new Date();
+        let sDate5 = new Date();
         LOGGER.info("Get bills by ID");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
@@ -153,7 +157,7 @@ module.exports = {
                         })
                     }
                     if (res2) {
-
+                        let sD2 = new Date();
                         return Bill
                             .findAll({
                                 where: {
@@ -163,9 +167,9 @@ module.exports = {
 
                             })
                             .then((bills) => {
-                                var eDate5 = new Date();
-                                var miliseconds5 = (eDate5.getTime() - sDate5.getTime());
-                                sdc.timing('get_bill_api_time', miliseconds5);
+                                let eD2 = new Date();
+                                let miliseconds2 = (eD2.getTime() - sD2.getTime());
+                                sdc.timing('get_bill_DBQuery_time', miliseconds2);
 
                                 if (bills.length == 0) {
                                     return res.status(404).send({
@@ -189,6 +193,9 @@ module.exports = {
                                         }
 
                                     })
+                                    let eDate5 = new Date();
+                                    let miliseconds5 = (eDate5.getTime() - sDate5.getTime());
+                                    sdc.timing('get_bill_api_time', miliseconds5);
                                     return res.status(200).send(bills);
                                 }
                             })
@@ -205,7 +212,7 @@ module.exports = {
 
     getBill(req, res) {
         sdc.increment('get_bill_by_ID');
-        var sDate10 = new Date();
+        let sDate10 = new Date();
         LOGGER.info("BILL IS BEING CREATED");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
@@ -245,7 +252,7 @@ module.exports = {
                         })
                     }
                     if (res2) {
-
+                        let sD3 = new Date();
                         return Bill
                             .findAll({
                                 where: {
@@ -255,9 +262,9 @@ module.exports = {
                                 include: File
                             })
                             .then((bills) => {
-                                var eDate10 = new Date();
-                                var miliseconds10 = (eDate10.getTime() - sDate10.getTime());
-                                sdc.timing('get_bill_api_time', miliseconds10);
+                                let eD3 = new Date();
+                                let miliseconds3 = (eD3.getTime() - sD3.getTime());
+                                sdc.timing('get_bill_DBQuery_time', miliseconds3);
 
                                 if (bills.length == 0) {
                                     return res.status(404).send({
@@ -284,6 +291,9 @@ module.exports = {
                                         bills[0].dataValues.attachment = null;
 
                                     }
+                                    let eDate10 = new Date();
+                                    let miliseconds10 = (eDate10.getTime() - sDate10.getTime());
+                                    sdc.timing('get_bill_api_time', miliseconds10);
                                     return res.status(200).send(bills[0]);
                                 }
                             })
@@ -311,7 +321,7 @@ module.exports = {
 
     updateBill(req, res) {
         sdc.increment('get_bill_by_ID');
-        var sDate11 = new Date();
+        let sDate11 = new Date();
         LOGGER.info("UPDATING THE BILL");
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -390,7 +400,7 @@ module.exports = {
                                     });
                                 }
                                 else {
-
+                                    let sD4 = new Date();
                                     return Bill
                                         .update({
                                             vendor: req.body.vendor,
@@ -404,8 +414,11 @@ module.exports = {
                                                 where: { id: req.params.id }
                                             })
                                         .then((bill) => {
-                                            var eDate11 = new Date();
-                                            var miliseconds11 = (eDate11.getTime() - sDate11.getTime());
+                                            let eD4 = new Date();
+                                            let milisecond4 = (eD4.getTime() - sD4.getTime());
+                                            sdc.timing('get_bill_by_ID_DBQuery_time', milisecond4);
+                                            let eDate11 = new Date();
+                                            let miliseconds11 = (eDate11.getTime() - sDate11.getTime());
                                             sdc.timing('get_bill_by_ID_api_time', miliseconds11);
 
                                             LOGGER.info("Bill updated !!");
@@ -432,7 +445,7 @@ module.exports = {
 
     deleteBill(req, res) {
         sdc.increment('delete_bill_by_ID');
-        var sDate12 = new Date();
+        let sDate12 = new Date();
         LOGGER.info("DELETING THE BILL");
         let startDate = new Date();
         if (!req.headers.authorization) {
@@ -482,9 +495,6 @@ module.exports = {
                                 include: File
                             })
                             .then((bills) => {
-                                var eDate12 = new Date();
-                                var miliseconds12 = (eDate12.getTime() - sDate12.getTime());
-                                sdc.timing('get_bill_by_ID_api_time', miliseconds12);
 
                                 if (bills.length == 0) {
                                     return res.status(404).send({
@@ -517,7 +527,7 @@ module.exports = {
                                             }, function (err09) {
                                                 let eDate13 = new Date();
                                                 let miliseconds13 = (eDate13.getTime() - sDate13.getTime());
-                                                sdc.timing('delete_bill_by_IDs', miliseconds13);
+                                                sdc.timing('delete_bill_by_ID_S3_Bucket_Time', miliseconds13);
                                                 if (err09) {
                                                     LOGGER.error("S3 Delete Error :: err09 : " + err09);
                                                     return res.status(400).send({
@@ -541,12 +551,15 @@ module.exports = {
                                                                 .then((rowDeleted) => {
                                                                     let eDate14 = new Date();
                                                                     let miliseconds14 = (eDate14.getTime() - sDate14.getTime());
-                                                                    sdc.timing('deleteBillByID_DBQueryTime', milisesconds14);
+                                                                    sdc.timing('deleteBillByID_DBQueryTime', miliseconds14);
                                                                     if (rowDeleted === 1) {
                                                                         let endDate = new Date();
                                                                         let seconds = (endDate.getTime() - startDate.getTime());
                                                                         sdc.timing('successfulDeleteBillByID_APICallTime', seconds);
                                                                         LOGGER.info("Bill Deleted Successfuuly");
+                                                                        let eDate12 = new Date();
+                                                                        let miliseconds12 = (eDate12.getTime() - sDate12.getTime());
+                                                                        sdc.timing('get_bill_by_ID_api_time', miliseconds12);
                                                                         res.status(204).send('Deleted successfully');
                                                                     }
                                                                 })
@@ -574,6 +587,9 @@ module.exports = {
                                             }
                                         })
                                         .then((rowDeleted) => {
+                                            let eDate12 = new Date();
+                                            let miliseconds12 = (eDate12.getTime() - sDate12.getTime());
+                                            sdc.timing('get_bill_by_ID_api_time', miliseconds12);
                                             if (rowDeleted === 1) {
                                                 LOGGER.info("BILL DELETED !!");
                                                 res.status(204).send('Deleted successfully');

@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 const sequelize = require("../config/postgres.js").sequelize;
-var Files = sequelize.define('attachments', {
+let Files = sequelize.define('attachments', {
   id: {
     allowNull: false,
     type: Sequelize.UUID,

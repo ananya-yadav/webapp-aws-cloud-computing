@@ -26,7 +26,9 @@
     "pg": "^7.18.2",
     "pg-hstore": "^2.3.2",
     "promise": "^8.0.3",
+    "properties-reader": "^1.0.0",
     "sequelize": "^4.1.0",
+    "statsd-client": "^0.4.4",
     "supertest-chai": "0.0.8"
   },
   "devDependencies": {

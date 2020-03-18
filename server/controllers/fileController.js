@@ -5,10 +5,16 @@ const moment = require('moment');
 const fs = require('fs');
 const md5File = require('md5-file');
 
+//LOGGER
+const LOGGER = require("../logger/loger.js");
+const SDC = require('statsd-client');
+const sdc = new SDC({ host: 'localhost', port: 8125 });
+
 moment.suppressDeprecationWarnings = true;
 
 const uuidv4 = require('uuid/v4');
 const path = require('path');
+
 
 const multer = require('multer');
 // const bucket = "to run locally uncomment this!";
@@ -78,6 +84,7 @@ const { validationResult } = require('express-validator');
 module.exports = {
 
     createFile(req, res) {
+        LOGGER.info("FILE IS BEING CREATED");
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -169,17 +176,20 @@ module.exports = {
                     }
                 })
                 .catch((error) => {
+                    LOGGER.error({errors:errors.array()});
                     if (error.parent.file == "uuid.c") {
                         res.status(400).send({
                             message: "Invalid Bill Id type: UUID/V4 Passed!"
                         })
                     }
                     res.status(400).send({
+                     
                         message: "Bill Not Found!"
                     })
                 });
         })
             .catch((error) => {
+                LOGGER.error({errors:errors.array()});
                 res.status(400).send({
                     error: error
                 })
@@ -188,6 +198,7 @@ module.exports = {
     },
 
     getFile(req, res) {
+        LOGGER.info("Access the file");
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -224,6 +235,7 @@ module.exports = {
                                 }
                             })
                             .then((file) => {
+                                LOGGER.info("GETTING THE FILE !!");
                                 if (file.length == 0) {
                                     return res.status(404).send({
                                         message: "File Not Found!"
@@ -260,11 +272,14 @@ module.exports = {
                         })
                     }
                     res.status(400).send({
+                        
                         message: "Bill Not Found!"
                     })
+                    LOGGER.error({errors:errors.array()});
                 });
         })
             .catch((error) => {
+                LOGGER.error({errors:errors.array()});
                 res.status(400).send({
                     error: error
                 })
@@ -273,6 +288,7 @@ module.exports = {
     },
 
     deleteFile(req, res) {
+        LOGGER.info("DELETING THE FILE");
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -347,10 +363,12 @@ module.exports = {
                                                     })
                                                     .then((rowDeleted) => {
                                                         if (rowDeleted === 1) {
+                                                            LOGGER.info("FILE DELETED");
                                                             res.status(204).send('Deleted successfully');
                                                         }
                                                     })
                                                     .catch((error2) => {
+                                                        LOGGER.error({errors:errors.array()});
                                                         res.status(400).send(error2);
                                                     });
                                             }
@@ -361,11 +379,13 @@ module.exports = {
                                             res.status(400).send({
                                                 message: "Invalid File Id type: UUID/V4 Passed!"
                                             })
+                                            LOGGER.error({errors:errors.array()});
                                         }
                                         res.status(400).send(error);
                                     });
                             })
                             .catch((error1) => {
+                                LOGGER.error({errors:errors.array()});
                                 res.status(400).send(error1);
                             })
                     }
@@ -385,6 +405,7 @@ module.exports = {
                 res.status(400).send({
                     error: error
                 })
+                LOGGER.error({errors:errors.array()});
             });
 
     }
@@ -441,6 +462,7 @@ const authorizeAnUser = function (req, res) {
                 return res.status(400).send({
                     message: 'Error occured while finding an user!'
                 });
+                
             });
     });
 }

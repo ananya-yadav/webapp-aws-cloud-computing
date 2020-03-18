@@ -1,5 +1,8 @@
 const User = require('../models/userModel').User;
 const { validationResult } = require('express-validator');
+const LOGGER = require("../logger/loger.js");
+const SDC = require('statsd-client');
+const sdc = new SDC({ host: 'localhost', port: 8125 });
 
 const uuidv4 = require('uuid/v4');
 
@@ -8,6 +11,7 @@ const bcrypt = require(`bcrypt`);
 
 module.exports = {
   create(req, res) {
+    LOGGER.info("CREATING USER");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -46,16 +50,24 @@ module.exports = {
               delete user.dataValues.createdAt;
               user.dataValues.account_updated = user.dataValues.updatedAt;
               delete user.dataValues.updatedAt;
+              LOGGER.info("USER HAS BEEN CREATED");
               res.status(201).send(user)
             })
-            .catch((error) => res.status(400).send(error));
+         
+            .catch((error) =>res.status(400).send(error));
         }
       })
-      .catch((error) => res.status(400).send(error));
+     
+      .catch((error) => {
+        LOGGER.error({errors:errors.array()});
+        res.status(400).send(error);
+
+      });
   },
 
 
   getUser(req, res) {
+    LOGGER.info("GET USERS BY SPECIFIC ID");
     // req -> Request Object -> Headers -> Basic Auth with Username & Password -> req.headers.authorization
     // Eg : Basic bsifhdjasz#shbdfiIUHQUhnjdaj123
     if (!req.headers.authorization) {
@@ -105,6 +117,7 @@ module.exports = {
                     delete user[0].dataValues.createdAt;
                     user[0].dataValues.account_updated = user[0].dataValues.updatedAt;
                     delete user[0].dataValues.updatedAt;
+                    LOGGER.info("GET USER");
         
             return res.status(200).send(user[0]);
 
@@ -113,7 +126,10 @@ module.exports = {
           }
         });
       })
-      .catch((error) => res.status(400).send(error));
+      .catch((error) => {res.status(400).send(error);
+        LOGGER.error({errors:errors.array()});
+
+      });
   },
 
 
@@ -121,6 +137,7 @@ module.exports = {
 
 
   update(req, res) {
+    LOGGER.info("USER BEING UPDATED");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -180,6 +197,7 @@ module.exports = {
                       where: { email_address: uName }
                     })
                   .then((user) =>{
+                    LOGGER.info("USER UPDATED");
                     res.status(204).send("Updated Successfully!");
                   })
                   .catch((error) => res.status(400).send(error));
@@ -187,11 +205,16 @@ module.exports = {
             })
 
           } else {
+            LOGGER.error({errors:errors.array()});
             return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
           }
         });
       })
-      .catch((error) => res.status(400).send(error));
+      .catch((error) => {
+        LOGGER.error({errors:errors.array()});
+      
+        res.status(400).send(error);
+      });
   }
 };
 

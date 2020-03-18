@@ -13,11 +13,24 @@ moment.suppressDeprecationWarnings = true;
 const bcrypt = require(`bcrypt`);
 
 const uuidv4 = require('uuid/v4');
+const aws = require('aws-sdk');
+const s3 = new aws.S3({ apiVersion: '2006-03-01' });
+const bucket = process.env.S3_BUCKET;
+
+//LOGGER
+
+const LOGGER = require("../logger/logger.js");
+const SDC = require('statsd-client');
+const sdc = new SDC({ host: 'localhost', port: 8125 });
 
 module.exports = {
     createBill(req, res) {
+        sdc.increment('create_bill');
+        let sDate8 = new Date();
+        LOGGER.info("BILL IS BEING CREATED")
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            LOGGER.error({ errors: errors.array() });
             return res.status(400).json({ errors: errors.array() });
         }
         if (req.body.owner_id != undefined || req.body.owner_id != null) {
@@ -32,7 +45,7 @@ module.exports = {
         }
         if (req.body.updated_ts != undefined || req.body.updated_ts != null || req.body.updatedAt != undefined || req.body.updatedAt != null) {
             return res.status(400).send({
-                message: "You cannot uodate bill's update date and time!"
+                message: "You cannot update bill's update date and time!"
             })
         }
 
@@ -75,13 +88,20 @@ module.exports = {
                         billData = req.body;
                         billData.id = uuidv4();
                         billData.owner_id = user[0].id;
+                        let sD1 = new Date();
                         return Bill
                             .create(billData)
                             .then((bill) => {
+                                let eD1 = new Date();
+                                let miliseconds1 = (eD1.getTime() - sD1.getTime());
+                                sdc.timing('create_bill_DBQuery_time', miliseconds1);
                                 bill.dataValues.created_ts = bill.dataValues.createdAt;
                                 delete bill.dataValues.createdAt;
                                 bill.dataValues.updated_ts = bill.dataValues.updatedAt;
                                 delete bill.dataValues.updatedAt;
+                                let eDate8 = new Date();
+                                let miliseconds8 = (eDate8.getTime() - sDate8.getTime());
+                                sdc.timing('create_bill_api_time', miliseconds8);
                                 res.status(201).send(bill)
                             })
                             .catch((error) => res.status(400).send(error));
@@ -95,6 +115,9 @@ module.exports = {
     },
 
     getBills(req, res) {
+        sdc.increment('get_bill');
+        let sDate5 = new Date();
+        LOGGER.info("Get bills by ID");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
             authenticationStatus(res);
@@ -134,7 +157,7 @@ module.exports = {
                         })
                     }
                     if (res2) {
-
+                        let sD2 = new Date();
                         return Bill
                             .findAll({
                                 where: {
@@ -144,7 +167,10 @@ module.exports = {
 
                             })
                             .then((bills) => {
-                                console.log("gvjhkjaslzdvkxhbjzlSCZHvk-----------------------------------")
+                                let eD2 = new Date();
+                                let miliseconds2 = (eD2.getTime() - sD2.getTime());
+                                sdc.timing('get_bill_DBQuery_time', miliseconds2);
+
                                 if (bills.length == 0) {
                                     return res.status(404).send({
                                         message: 'Bill not found for the user!',
@@ -157,29 +183,37 @@ module.exports = {
                                         delete bill.dataValues.createdAt;
                                         bill.dataValues.updated_ts = bill.dataValues.updatedAt;
                                         delete bill.dataValues.updatedAt;
-                                        if (bill.dataValues.attachment != null){
+                                        if (bill.dataValues.attachment != null) {
                                             delete bill.dataValues.attachment.dataValues.size;
                                             delete bill.dataValues.attachment.dataValues.bill;
                                             delete bill.dataValues.attachment.dataValues.md5;
-                                        }else{
+                                        } else {
                                             bill.dataValues.attachment = null;
-       
-                                           }
+
+                                        }
 
                                     })
+                                    let eDate5 = new Date();
+                                    let miliseconds5 = (eDate5.getTime() - sDate5.getTime());
+                                    sdc.timing('get_bill_api_time', miliseconds5);
                                     return res.status(200).send(bills);
                                 }
                             })
 
                     } else {
+                        LOGGER.error({ errors: errors.array() });
                         return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
                     }
                 });
             })
+
             .catch((error) => res.status(400).send(error));
     },
 
     getBill(req, res) {
+        sdc.increment('get_bill_by_ID');
+        let sDate10 = new Date();
+        LOGGER.info("BILL IS BEING CREATED");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
             authenticationStatus(res);
@@ -218,7 +252,7 @@ module.exports = {
                         })
                     }
                     if (res2) {
-
+                        let sD3 = new Date();
                         return Bill
                             .findAll({
                                 where: {
@@ -228,6 +262,10 @@ module.exports = {
                                 include: File
                             })
                             .then((bills) => {
+                                let eD3 = new Date();
+                                let miliseconds3 = (eD3.getTime() - sD3.getTime());
+                                sdc.timing('get_bill_DBQuery_time', miliseconds3);
+
                                 if (bills.length == 0) {
                                     return res.status(404).send({
                                         message: 'Bill not found for the user!',
@@ -244,15 +282,18 @@ module.exports = {
                                     delete bills[0].dataValues.createdAt;
                                     bills[0].dataValues.updated_ts = bills[0].dataValues.updatedAt;
                                     delete bills[0].dataValues.updatedAt;
-                                    if (bills[0].dataValues.attachment != null){
+                                    if (bills[0].dataValues.attachment != null) {
                                         delete bills[0].dataValues.attachment.dataValues.md5;
                                         delete bills[0].dataValues.attachment.dataValues.size;
                                         delete bills[0].dataValues.attachment.dataValues.bill;
                                     }
-                                    else{
-                                     bills[0].dataValues.attachment = null;
+                                    else {
+                                        bills[0].dataValues.attachment = null;
 
                                     }
+                                    let eDate10 = new Date();
+                                    let miliseconds10 = (eDate10.getTime() - sDate10.getTime());
+                                    sdc.timing('get_bill_api_time', miliseconds10);
                                     return res.status(200).send(bills[0]);
                                 }
                             })
@@ -266,14 +307,22 @@ module.exports = {
                             })
 
                     } else {
+                        LOGGER.error({ errors: errors.array() });
                         return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
                     }
                 });
             })
-            .catch((error) => res.status(400).send(error));
+
+            .catch((error) => {
+                LOGGER.error({ errors: errors.array() });
+                res.status(400).send(error);
+            });
     },
 
     updateBill(req, res) {
+        sdc.increment('get_bill_by_ID');
+        let sDate11 = new Date();
+        LOGGER.info("UPDATING THE BILL");
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -351,7 +400,7 @@ module.exports = {
                                     });
                                 }
                                 else {
-
+                                    let sD4 = new Date();
                                     return Bill
                                         .update({
                                             vendor: req.body.vendor,
@@ -365,6 +414,14 @@ module.exports = {
                                                 where: { id: req.params.id }
                                             })
                                         .then((bill) => {
+                                            let eD4 = new Date();
+                                            let milisecond4 = (eD4.getTime() - sD4.getTime());
+                                            sdc.timing('get_bill_by_ID_DBQuery_time', milisecond4);
+                                            let eDate11 = new Date();
+                                            let miliseconds11 = (eDate11.getTime() - sDate11.getTime());
+                                            sdc.timing('get_bill_by_ID_api_time', miliseconds11);
+
+                                            LOGGER.info("Bill updated !!");
                                             res.status(204).send("Updated Successfully!");
                                         })
                                         .catch((error) => res.status(400).send(error));
@@ -375,14 +432,22 @@ module.exports = {
                             }));
 
                     } else {
+                        LOGGER.error({ errors: errors.array() });
                         return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
                     }
                 });
             })
-            .catch((error) => res.status(400).send(error));
+            .catch((error) => {
+                LOGGER.error({ errors: errors.array() });
+                res.status(400).send(error);
+            });
     },
 
     deleteBill(req, res) {
+        sdc.increment('delete_bill_by_ID');
+        let sDate12 = new Date();
+        LOGGER.info("DELETING THE BILL");
+        let startDate = new Date();
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
             authenticationStatus(res);
@@ -426,9 +491,11 @@ module.exports = {
                             .findAll({
                                 where: {
                                     id: req.params.id
-                                }
+                                },
+                                include: File
                             })
                             .then((bills) => {
+
                                 if (bills.length == 0) {
                                     return res.status(404).send({
                                         message: 'Bill not found for the user!',
@@ -441,46 +508,107 @@ module.exports = {
                                     })
                                 }
                                 if (bills[0].dataValues.attachment != null) {
+                                    LOGGER.info("-------------(bills[0].dataValues.attachment-----------------")
+                                    LOGGER.info(bills[0].dataValues.attachment);
+
+                                    LOGGER.info("-------------(bills[0].dataValues.attachment.dataValues.id-----------------")
+                                    LOGGER.info(bills[0].dataValues.attachment.dataValues.id);
                                     File
                                         .findAll({
                                             where: {
-                                                id: bills[0].dataValues.attachment
+                                                id: bills[0].dataValues.attachment.dataValues.id
                                             }
                                         })
                                         .then((files) => {
-                                            fs.unlink(files[0].dataValues.url, function (err) {
-                                                File
-                                                    .destroy({
-                                                        where: {
-                                                            id: bills[0].dataValues.attachment
-                                                        }
+                                            let sDate13 = new Date();
+                                            s3.deleteObject({
+                                                Bucket: bucket,
+                                                Key: files[0].dataValues.key
+                                            }, function (err09) {
+                                                let eDate13 = new Date();
+                                                let miliseconds13 = (eDate13.getTime() - sDate13.getTime());
+                                                sdc.timing('delete_bill_by_ID_S3_Bucket_Time', miliseconds13);
+                                                if (err09) {
+                                                    LOGGER.error("S3 Delete Error :: err09 : " + err09);
+                                                    return res.status(400).send({
+                                                        message: "Error while deleting from S3!"
                                                     })
+                                                } else {
+                                                    return File
+                                                        .destroy({
+                                                            where: {
+                                                                id: bills[0].dataValues.attachment.dataValues.id
+                                                            }
+                                                        })
+                                                        .then((rowDeleted) => {
+                                                            let sDate14 = new Date();
+                                                            return Bill
+                                                                .destroy({
+                                                                    where: {
+                                                                        id: req.params.id
+                                                                    }
+                                                                })
+                                                                .then((rowDeleted) => {
+                                                                    let eDate14 = new Date();
+                                                                    let miliseconds14 = (eDate14.getTime() - sDate14.getTime());
+                                                                    sdc.timing('deleteBillByID_DBQueryTime', miliseconds14);
+                                                                    if (rowDeleted === 1) {
+                                                                        let endDate = new Date();
+                                                                        let seconds = (endDate.getTime() - startDate.getTime());
+                                                                        sdc.timing('successfulDeleteBillByID_APICallTime', seconds);
+                                                                        LOGGER.info("Bill Deleted Successfuuly");
+                                                                        let eDate12 = new Date();
+                                                                        let miliseconds12 = (eDate12.getTime() - sDate12.getTime());
+                                                                        sdc.timing('get_bill_by_ID_api_time', miliseconds12);
+                                                                        res.status(204).send('Deleted successfully');
+                                                                    }
+                                                                })
+                                                                .catch((e) => {
+                                                                    LOGGER.error({ "Error": e })
+                                                                    res.status(400).send({
+                                                                        message: "Some Error Occured While Deleting!",
+                                                                        error: e
+                                                                    })
+                                                                })
+                                                        })
+                                                        .catch((error2) => {
+                                                            LOGGER.error("File Deleted Error :: error2 : " + error2);
+                                                            res.status(400).send(error2);
+                                                        });
+                                                }
                                             })
                                         });
-                                }
+                                } else {
 
-                                return Bill
-                                    .destroy({
-                                        where: {
-                                            id: req.params.id
-                                        }
-                                    })
-                                    .then((rowDeleted) => {
-                                        if (rowDeleted === 1) {
-                                            res.status(204).send('Deleted successfully');
-                                        }
-                                    })
-                                    .catch((e) => res.status(400).send({
-                                        message: "Some Error Occured While Deleting!",
-                                        error: e
-                                    }))
+                                    return Bill
+                                        .destroy({
+                                            where: {
+                                                id: req.params.id
+                                            }
+                                        })
+                                        .then((rowDeleted) => {
+                                            let eDate12 = new Date();
+                                            let miliseconds12 = (eDate12.getTime() - sDate12.getTime());
+                                            sdc.timing('get_bill_by_ID_api_time', miliseconds12);
+                                            if (rowDeleted === 1) {
+                                                LOGGER.info("BILL DELETED !!");
+                                                res.status(204).send('Deleted successfully');
+                                            }
+                                        })
+                                        .catch((e) => res.status(400).send({
+                                            message: "Some Error Occured While Deleting!",
+                                            error: e
+                                        }))
+                                }
 
                             })
                             .catch((error) => res.status(400).send({
+
                                 message: "Bill not found!"
                             }));
 
                     } else {
+                        LOGGER.error({ errors: errors.array() });
                         return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
                     }
                 });

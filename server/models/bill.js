@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 const sequelize = require("../config/postgres.js").sequelize;
-var Bill = sequelize.define('bill', {
+let Bill = sequelize.define('bill', {
     id: {
         allowNull: false,
         primaryKey: true,

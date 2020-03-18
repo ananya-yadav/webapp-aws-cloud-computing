@@ -76,7 +76,7 @@ module.exports = {
                     return res.status(404).send({
                         message: 'User Not Found! Invalid Username!',
                     });
-                } var startDate = new Date();
+                } 
                 console.log(`req.body.password : ${req.body.password} :: user[0].dataValues.password : ${user[0].dataValues.password}`)
                 bcrypt.compare(pswd, user[0].dataValues.password, function (err, res2) {
                     if (err) {
@@ -97,7 +97,7 @@ module.exports = {
                                 delete bill.dataValues.updatedAt;
                                 var eDate8 = new Date();
                                 var miliseconds8 = (eDate8.getTime() - sDate8.getTime());
-                                sdc.timing('create_bill_api_time', seconds);
+                                sdc.timing('create_bill_api_time', miliseconds8);
                                 res.status(201).send(bill)
                             })
                             .catch((error) => res.status(400).send(error));

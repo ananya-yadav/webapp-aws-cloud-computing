@@ -19,6 +19,7 @@
     "commander": "^4.1.0",
     "express": "^4.14.0",
     "express-validator": "^6.3.1",
+    "log4js": "^6.1.2",
     "md5-file": "^4.0.0",
     "morgan": "^1.7.0",
     "multer": "^1.4.2",

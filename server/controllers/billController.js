@@ -494,8 +494,8 @@ module.exports = {
                                                 let endDate3 = new Date();
                                                 let seconds3 = (endDate3.getTime() - startDate3.getTime());
                                                 sdc.timing('deleteFile_S3Time', seconds3);
-                                                if (err1) {
-                                                    LOGGER.error("S3 Delete Error :: err1 : " + err1);
+                                                if (err09) {
+                                                    LOGGER.error("S3 Delete Error :: err09 : " + err09);
                                                     return res.status(400).send({
                                                         message: "Error while deleting from S3!"
                                                     })

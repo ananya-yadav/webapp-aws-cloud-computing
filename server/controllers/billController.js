@@ -455,7 +455,8 @@ deleteBill(req, res) {
                         .findAll({
                             where: {
                                 id: req.params.id
-                            }
+                            },
+                            include: File
                         })
                         .then((bills) => {
                             if (bills.length == 0) {
@@ -473,17 +474,63 @@ deleteBill(req, res) {
                                 File
                                     .findAll({
                                         where: {
-                                            id: bills[0].dataValues.attachment
+                                            id: bills[0].dataValues.attachment.dataValues.id
                                         }
                                     })
                                     .then((files) => {
-                                        fs.unlink(files[0].dataValues.url, function (err) {
-                                            File
-                                                .destroy({
-                                                    where: {
-                                                        id: bills[0].dataValues.attachment
-                                                    }
+                                        let startDate3 = new Date();
+                                        s3.deleteObject({
+                                            Bucket: bucket,
+                                            Key: files[0].key
+                                        }, function (err09) {
+                                            let endDate3 = new Date();
+                                            let seconds3 = (endDate3.getTime() - startDate3.getTime()) ;
+                                            sdc.timing('deleteFile_S3Time', seconds3);
+                                            if (err1) {
+                                                LOGGER.error("S3 Delete Error :: err1 : " + err1);
+                                                return res.status(400).send({
+                                                    message: "Error while deleting from S3!"
                                                 })
+                                            } else {
+                                                return File
+                                                    .destroy({
+                                                        where: {
+                                                            id: bills[0].dataValues.attachment.dataValues.id
+                                                        }
+                                                    })
+                                                    .then((rowDeleted) => {
+                                                        let startDate2 = new Date();
+                                                        return Bill
+                                                            .destroy({
+                                                                where: {
+                                                                    id: req.params.id
+                                                                }
+                                                            })
+                                                            .then((rowDeleted) => {
+                                                                let endDate2 = new Date();
+                                                                let seconds2 = (endDate2.getTime() - startDate2.getTime()) ;
+                                                                sdc.timing('deleteBillByID_DBQueryTime', seconds2);
+                                                                if (rowDeleted === 1) {
+                                                                    let endDate = new Date();
+                                                                    let seconds = (endDate.getTime() - startDate.getTime()) ;
+                                                                    sdc.timing('successfulDeleteBillByID_APICallTime', seconds);
+                                                                    LOGGER.info("Bill Deleted Successfuuly");
+                                                                    res.status(204).send('Deleted successfully');
+                                                                }
+                                                            })
+                                                            .catch((e) => {
+                                                                LOGGER.error({ "Error": e })
+                                                                res.status(400).send({
+                                                                    message: "Some Error Occured While Deleting!",
+                                                                    error: e
+                                                                })
+                                                            })
+                                                    })
+                                                    .catch((error2) => {
+                                                        LOGGER.error("File Deleted Error :: error2 : " + error2);
+                                                        res.status(400).send(error2);
+                                                    });
+                                            }
                                         })
                                     });
                             }

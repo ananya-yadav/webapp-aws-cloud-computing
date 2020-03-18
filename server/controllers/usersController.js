@@ -1,6 +1,6 @@
 const User = require('../models/userModel').User;
 const { validationResult } = require('express-validator');
-const LOGGER = require("../logger/loger.js");
+const LOGGER = require("../logger/logger.js");
 const SDC = require('statsd-client');
 const sdc = new SDC({ host: 'localhost', port: 8125 });
 

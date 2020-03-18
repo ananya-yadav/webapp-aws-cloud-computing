@@ -16,7 +16,7 @@ const uuidv4 = require('uuid/v4');
 
 //LOGGER
 
-const LOGGER = require("../logger/loger.js");
+const LOGGER = require("../logger/logger.js");
 const SDC = require('statsd-client');
 const sdc = new SDC({ host: 'localhost', port: 8125 });
 

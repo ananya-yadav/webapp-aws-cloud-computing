@@ -6,7 +6,7 @@ const fs = require('fs');
 const md5File = require('md5-file');
 
 //LOGGER
-const LOGGER = require("../logger/loger.js");
+const LOGGER = require("../logger/logger.js");
 const SDC = require('statsd-client');
 const sdc = new SDC({ host: 'localhost', port: 8125 });
 

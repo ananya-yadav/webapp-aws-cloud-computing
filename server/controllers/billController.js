@@ -415,6 +415,7 @@ module.exports = {
 
     deleteBill(req, res) {
         LOGGER.info("DELETING THE BILL");
+        let startDate = new Date();
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
             authenticationStatus(res);

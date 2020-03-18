@@ -474,6 +474,11 @@ deleteBill(req, res) {
                                 })
                             }
                             if (bills[0].dataValues.attachment != null) {
+                                LOGGER.info("-------------(bills[0].dataValues.attachment-----------------")
+                                LOGGER.info(bills[0].dataValues.attachment);
+
+                                LOGGER.info("-------------(bills[0].dataValues.attachment.dataValues.id-----------------")
+                                LOGGER.info(bills[0].dataValues.attachment.dataValues.id);
                                 File
                                     .findAll({
                                         where: {

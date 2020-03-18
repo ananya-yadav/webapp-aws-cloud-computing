@@ -26,7 +26,7 @@ const sdc = new SDC({ host: 'localhost', port: 8125 });
 module.exports = {
     createBill(req, res) {
         sdc.increment('create_bill');
-        var startDate = new Date();
+        var sDate8 = new Date();
         LOGGER.info("BILL IS BEING CREATED")
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -95,8 +95,8 @@ module.exports = {
                                 delete bill.dataValues.createdAt;
                                 bill.dataValues.updated_ts = bill.dataValues.updatedAt;
                                 delete bill.dataValues.updatedAt;
-                                var endDate = new Date();
-                                var seconds = (endDate.getTime() - startDate.getTime());
+                                var eDate8 = new Date();
+                                var miliseconds8 = (eDate8.getTime() - sDate8.getTime());
                                 sdc.timing('create_bill_api_time', seconds);
                                 res.status(201).send(bill)
                             })
@@ -111,6 +111,8 @@ module.exports = {
     },
 
     getBills(req, res) {
+        sdc.increment('get_bill');
+        var sDate5 = new Date();
         LOGGER.info("Get bills by ID");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
@@ -161,7 +163,10 @@ module.exports = {
 
                             })
                             .then((bills) => {
-                                console.log("gvjhkjaslzdvkxhbjzlSCZHvk-----------------------------------")
+                                var eDate5 = new Date();
+                                var miliseconds5 = (eDate5.getTime() - sDate5.getTime());
+                                sdc.timing('get_bill_api_time', miliseconds5);
+
                                 if (bills.length == 0) {
                                     return res.status(404).send({
                                         message: 'Bill not found for the user!',
@@ -199,6 +204,8 @@ module.exports = {
     },
 
     getBill(req, res) {
+        sdc.increment('get_bill_by_ID');
+        var sDate10 = new Date();
         LOGGER.info("BILL IS BEING CREATED");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
@@ -248,6 +255,10 @@ module.exports = {
                                 include: File
                             })
                             .then((bills) => {
+                                var eDate10 = new Date();
+                                var miliseconds10 = (eDate10.getTime() - sDate10.getTime());
+                                sdc.timing('get_bill_api_time', miliseconds10);
+
                                 if (bills.length == 0) {
                                     return res.status(404).send({
                                         message: 'Bill not found for the user!',
@@ -299,6 +310,8 @@ module.exports = {
     },
 
     updateBill(req, res) {
+        sdc.increment('get_bill_by_ID');
+        var sDate11 = new Date();
         LOGGER.info("UPDATING THE BILL");
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -391,6 +404,10 @@ module.exports = {
                                                 where: { id: req.params.id }
                                             })
                                         .then((bill) => {
+                                            var eDate11 = new Date();
+                                            var miliseconds11 = (eDate11.getTime() - sDate11.getTime());
+                                            sdc.timing('get_bill_by_ID_api_time', miliseconds11);
+
                                             LOGGER.info("Bill updated !!");
                                             res.status(204).send("Updated Successfully!");
                                         })
@@ -414,6 +431,8 @@ module.exports = {
     },
 
     deleteBill(req, res) {
+        sdc.increment('delete_bill_by_ID');
+        var sDate12 = new Date();
         LOGGER.info("DELETING THE BILL");
         let startDate = new Date();
         if (!req.headers.authorization) {
@@ -463,6 +482,10 @@ module.exports = {
                                 include: File
                             })
                             .then((bills) => {
+                                var eDate12 = new Date();
+                                var miliseconds12 = (eDate12.getTime() - sDate12.getTime());
+                                sdc.timing('get_bill_by_ID_api_time', miliseconds12);
+
                                 if (bills.length == 0) {
                                     return res.status(404).send({
                                         message: 'Bill not found for the user!',
@@ -487,14 +510,14 @@ module.exports = {
                                             }
                                         })
                                         .then((files) => {
-                                            let startDate3 = new Date();
+                                            let sDate13 = new Date();
                                             s3.deleteObject({
                                                 Bucket: bucket,
                                                 Key: files[0].dataValues.key
                                             }, function (err09) {
-                                                let endDate3 = new Date();
-                                                let seconds3 = (endDate3.getTime() - startDate3.getTime());
-                                                sdc.timing('deleteFile_S3Time', seconds3);
+                                                let eDate13 = new Date();
+                                                let miliseconds13 = (eDate13.getTime() - sDate13.getTime());
+                                                sdc.timing('delete_bill_by_IDs', miliseconds13);
                                                 if (err09) {
                                                     LOGGER.error("S3 Delete Error :: err09 : " + err09);
                                                     return res.status(400).send({
@@ -508,7 +531,7 @@ module.exports = {
                                                             }
                                                         })
                                                         .then((rowDeleted) => {
-                                                            let startDate2 = new Date();
+                                                            let sDate14 = new Date();
                                                             return Bill
                                                                 .destroy({
                                                                     where: {
@@ -516,9 +539,9 @@ module.exports = {
                                                                     }
                                                                 })
                                                                 .then((rowDeleted) => {
-                                                                    let endDate2 = new Date();
-                                                                    let seconds2 = (endDate2.getTime() - startDate2.getTime());
-                                                                    sdc.timing('deleteBillByID_DBQueryTime', seconds2);
+                                                                    let eDate14 = new Date();
+                                                                    let miliseconds14 = (eDate14.getTime() - sDate14.getTime());
+                                                                    sdc.timing('deleteBillByID_DBQueryTime', milisesconds14);
                                                                     if (rowDeleted === 1) {
                                                                         let endDate = new Date();
                                                                         let seconds = (endDate.getTime() - startDate.getTime());

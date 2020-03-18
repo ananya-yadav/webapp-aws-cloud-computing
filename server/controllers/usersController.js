@@ -11,6 +11,8 @@ const bcrypt = require(`bcrypt`);
 
 module.exports = {
   create(req, res) {
+    sdc.increment('CREATE_USER');
+    var sDate15 = new Date();
     LOGGER.info("CREATING USER");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -50,16 +52,20 @@ module.exports = {
               delete user.dataValues.createdAt;
               user.dataValues.account_updated = user.dataValues.updatedAt;
               delete user.dataValues.updatedAt;
+              var eDate15 = new Date();
+              var miliseconds15 = (eDate15.getTime() - sDate15.getTime());
+              sdc.timing('CREATE_USER', miliseconds15);
+
               LOGGER.info("USER HAS BEEN CREATED");
               res.status(201).send(user)
             })
-         
-            .catch((error) =>res.status(400).send(error));
+
+            .catch((error) => res.status(400).send(error));
         }
       })
-     
+
       .catch((error) => {
-        LOGGER.error({errors:errors.array()});
+        LOGGER.error({ errors: errors.array() });
         res.status(400).send(error);
 
       });
@@ -67,6 +73,8 @@ module.exports = {
 
 
   getUser(req, res) {
+    sdc.increment('GET_USER');
+    var sDate16 = new Date();
     LOGGER.info("GET USERS BY SPECIFIC ID");
     // req -> Request Object -> Headers -> Basic Auth with Username & Password -> req.headers.authorization
     // Eg : Basic bsifhdjasz#shbdfiIUHQUhnjdaj123
@@ -94,11 +102,14 @@ module.exports = {
       },
     })
       .then((user) => {
-        
+        var eDate16 = new Date();
+        var miliseconds16 = (eDate16.getTime() - sDate16.getTime());
+        sdc.timing('GET_USER', miliseconds16);
+
         if (user.length == 0) {
           return res.status(404).send({
             message: 'User Not Found! Invalid !',
-           
+
           });
         }
         console.log(`req.body.password : ${req.body.password} :: user[0].dataValues.password : ${user[0].dataValues.password}`)
@@ -111,14 +122,14 @@ module.exports = {
             })
           }
           if (res2) {
-           
+
             delete user[0].dataValues.password;
-                    user[0].dataValues.account_created = user[0].dataValues.createdAt;
-                    delete user[0].dataValues.createdAt;
-                    user[0].dataValues.account_updated = user[0].dataValues.updatedAt;
-                    delete user[0].dataValues.updatedAt;
-                    LOGGER.info("GET USER");
-        
+            user[0].dataValues.account_created = user[0].dataValues.createdAt;
+            delete user[0].dataValues.createdAt;
+            user[0].dataValues.account_updated = user[0].dataValues.updatedAt;
+            delete user[0].dataValues.updatedAt;
+            LOGGER.info("GET USER");
+
             return res.status(200).send(user[0]);
 
           } else {
@@ -126,8 +137,9 @@ module.exports = {
           }
         });
       })
-      .catch((error) => {res.status(400).send(error);
-        LOGGER.error({errors:errors.array()});
+      .catch((error) => {
+        res.status(400).send(error);
+        LOGGER.error({ errors: errors.array() });
 
       });
   },
@@ -137,6 +149,8 @@ module.exports = {
 
 
   update(req, res) {
+    sdc.increment('UPDATE_USER');
+    var sDate17 = new Date();
     LOGGER.info("USER BEING UPDATED");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -170,7 +184,7 @@ module.exports = {
             message: 'User Not Found! Invalid Username!',
           });
         }
-        if(uName != req.body.email_address){
+        if (uName != req.body.email_address) {
           return res.status(400).send({
             message: 'Cannot change your email_address.'
           })
@@ -196,7 +210,10 @@ module.exports = {
                     {
                       where: { email_address: uName }
                     })
-                  .then((user) =>{
+                  .then((user) => {
+                    var eDate17 = new Date();
+                    var miliseconds17 = (eDate17.getTime() - sDate17.getTime());
+                    sdc.timing('UPDATE_USER', miliseconds17);
                     LOGGER.info("USER UPDATED");
                     res.status(204).send("Updated Successfully!");
                   })
@@ -205,14 +222,14 @@ module.exports = {
             })
 
           } else {
-            LOGGER.error({errors:errors.array()});
+            LOGGER.error({ errors: errors.array() });
             return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
           }
         });
       })
       .catch((error) => {
-        LOGGER.error({errors:errors.array()});
-      
+        LOGGER.error({ errors: errors.array() });
+
         res.status(400).send(error);
       });
   }

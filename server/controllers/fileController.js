@@ -85,6 +85,8 @@ module.exports = {
 
     createFile(req, res) {
         LOGGER.info("FILE IS BEING CREATED");
+        sdc.increment('Create_file');
+        var sDate = new Date();
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -101,7 +103,7 @@ module.exports = {
                         id: req.params.id
                     },
                     limit: 1,
-                    include : File
+                    include: File
                 })
                 .then((bills) => {
                     if (bills.length == 0) {
@@ -156,6 +158,9 @@ module.exports = {
                                         delete file.dataValues.bill;
                                         delete file.dataValues.key;
                                         delete file.dataValues.md5;
+                                        var eDate = new Date();
+                                        var miliseconds = (eDate.getTime() - sDate.getTime());
+                                        sdc.timing('create_file_api-time', miliseconds);
                                         Bill
                                             .update(
                                                 { attachment: file.dataValues.id },
@@ -177,20 +182,20 @@ module.exports = {
                     }
                 })
                 .catch((error) => {
-                    LOGGER.error({errors:errors.array()});
+                    LOGGER.error({ errors: errors.array() });
                     if (error.parent.file == "uuid.c") {
                         res.status(400).send({
                             message: "Invalid Bill Id type: UUID/V4 Passed!"
                         })
                     }
                     res.status(400).send({
-                     
+
                         message: "Bill Not Found!"
                     })
                 });
         })
             .catch((error) => {
-                LOGGER.error({errors:errors.array()});
+                LOGGER.error({ errors: errors.array() });
                 res.status(400).send({
                     error: error
                 })
@@ -200,6 +205,8 @@ module.exports = {
 
     getFile(req, res) {
         LOGGER.info("Access the file");
+        sdc.increment('get_file');
+        var sDate1 = new Date();
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -254,6 +261,9 @@ module.exports = {
                                 delete file[0].dataValues.key;
                                 delete file[0].dataValues.bill;
                                 delete file[0].dataValues.md5;
+                                var eDate1 = new Date();
+                                var miliseconds1 = (eDate1.getTime() - sDate1.getTime());
+                                sdc.timing('get_file_api-time', miliseconds1);
                                 res.status(200).send(file[0]);
                             })
                             .catch((error) => {
@@ -273,14 +283,14 @@ module.exports = {
                         })
                     }
                     res.status(400).send({
-                        
+
                         message: "Bill Not Found!"
                     })
-                    LOGGER.error({errors:errors.array()});
+                    LOGGER.error({ errors: errors.array() });
                 });
         })
             .catch((error) => {
-                LOGGER.error({errors:errors.array()});
+                LOGGER.error({ errors: errors.array() });
                 res.status(400).send({
                     error: error
                 })
@@ -290,6 +300,8 @@ module.exports = {
 
     deleteFile(req, res) {
         LOGGER.info("DELETING THE FILE");
+        sdc.increment('delete_file');
+        var sDate2 = new Date();
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() })
@@ -334,6 +346,9 @@ module.exports = {
                                         }
                                     })
                                     .then((file) => {
+                                        var eDate2 = new Date();
+                                        var miliseconds2 = (eDate2.getTime() - sDate2.getTime());
+                                        sdc.timing('delete_file_api-time', miliseconds2);
 
                                         if (file.length == 0) {
                                             return res.status(404).send({
@@ -345,31 +360,37 @@ module.exports = {
                                                 message: "File for this Bill Not Found!"
                                             })
                                         }
+                                        var sDate3 = new Date();
                                         s3.deleteObject({
                                             Bucket: bucket,
                                             Key: file[0].key
                                         }, function (err09) {
+                                            var eDate3 = new Date();
+                                            var miliseconds3 = (eDate3.getTime() - sDate3.getTime());
+                                            sdc.timing('delete_file_api-time', miliseconds3);
                                             if (err09) {
                                                 return res.status(400).send({
                                                     message: "Error while deleting from S3!"
                                                 })
                                             } else {
-
-                                                return File
-
+                                                var sDate4 = new Date();
+                                                return File                  
                                                     .destroy({
                                                         where: {
                                                             id: req.params.fileId
                                                         }
                                                     })
                                                     .then((rowDeleted) => {
+                                                        var eDate4 = new Date();
+                                                        var miliseconds4 = (eDate4.getTime() - sDate4.getTime());
+                                                        sdc.timing('delete_file_api-time', miliseconds4);
                                                         if (rowDeleted === 1) {
                                                             LOGGER.info("FILE DELETED");
                                                             res.status(204).send('Deleted successfully');
                                                         }
                                                     })
                                                     .catch((error2) => {
-                                                        LOGGER.error({errors:errors.array()});
+                                                        LOGGER.error({ errors: errors.array() });
                                                         res.status(400).send(error2);
                                                     });
                                             }
@@ -380,13 +401,13 @@ module.exports = {
                                             res.status(400).send({
                                                 message: "Invalid File Id type: UUID/V4 Passed!"
                                             })
-                                            LOGGER.error({errors:errors.array()});
+                                            LOGGER.error({ errors: errors.array() });
                                         }
                                         res.status(400).send(error);
                                     });
                             })
                             .catch((error1) => {
-                                LOGGER.error({errors:errors.array()});
+                                LOGGER.error({ errors: errors.array() });
                                 res.status(400).send(error1);
                             })
                     }
@@ -406,7 +427,7 @@ module.exports = {
                 res.status(400).send({
                     error: error
                 })
-                LOGGER.error({errors:errors.array()});
+                LOGGER.error({ errors: errors.array() });
             });
 
     }
@@ -463,7 +484,7 @@ const authorizeAnUser = function (req, res) {
                 return res.status(400).send({
                     message: 'Error occured while finding an user!'
                 });
-                
+
             });
     });
 }

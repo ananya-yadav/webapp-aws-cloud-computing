@@ -13,7 +13,7 @@ module.exports = (app) => {
   app.put('/v1/user/self', [check('email_address').exists().isEmail(), check('first_name').exists().isLength({min: 1, max: 100}), 
   check('last_name').exists().isLength({min:1, max:100}), check('password').exists()], userController.update);
   
-  app.post('/v1/user', [check('email_address').exists().isEmail(), check('first_name').exists().isLength({min: 1, max: 100}), 
+  app.post('/v2/user', [check('email_address').exists().isEmail(), check('first_name').exists().isLength({min: 1, max: 100}), 
       check('last_name').exists().isLength({min:1, max:100}), check('password').exists()], userController.create);
       
       

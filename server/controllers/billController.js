@@ -34,10 +34,10 @@ var sqs = new aws.SQS({apiVersion: '2012-11-05'});
 
 module.exports = {
     getBillsWhichAreDue(req, res) {
-        sdc.increment('get_bill');
+        sdc.increment('get_bills_which_are_due');
         let sDate5 = new Date();
         let days = req.params.x;
-        LOGGER.info("Get bills by ID");
+        LOGGER.info("Get bills which are due");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
             authenticationStatus(res);
@@ -93,7 +93,7 @@ module.exports = {
                             .then((bills) => {
                                 let eD2 = new Date();
                                 let miliseconds2 = (eD2.getTime() - sD2.getTime());
-                                sdc.timing('get_bill_DBQuery_time', miliseconds2);
+                                sdc.timing('get_bills_which_are_due_DBQuery_time', miliseconds2);
 
                                 if (bills.length == 0) {
                                     return res.status(404).send({
@@ -139,7 +139,7 @@ module.exports = {
                                     });
                                     let eDate5 = new Date();
                                     let miliseconds5 = (eDate5.getTime() - sDate5.getTime());
-                                    sdc.timing('get_bill_api_time', miliseconds5);
+                                    sdc.timing('get_bills_which_are_due_api_time', miliseconds5);
                                     return res.status(200).send(bills);
                                 }
 

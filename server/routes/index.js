@@ -43,6 +43,10 @@ module.exports = (app) => {
          app.get('/v1/bill/:billId/file/:fileId',fileController. getFile);
          app.delete('/v1/bill/:billId/file/:fileId',fileController. deleteFile);
 
+         //number of days
+
+         app,get('/v1/bills/due/:x', billController.getBillsWhichAreDue);
+
 
 
 };

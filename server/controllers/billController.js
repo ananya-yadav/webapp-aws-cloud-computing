@@ -37,7 +37,7 @@ module.exports = {
         sdc.increment('get_bills_which_are_due');
         let sDate5 = new Date();
         let days = req.params.x;
-        LOGGER.info("Get bills by number of days");
+        LOGGER.info("Get bills which are due");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
             authenticationStatus(res);

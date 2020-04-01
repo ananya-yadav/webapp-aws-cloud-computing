@@ -23,15 +23,20 @@ const LOGGER = require("../logger/logger.js");
 const SDC = require('statsd-client');
 const sdc = new SDC({ host: 'localhost', port: 8125 });
 
-// Create an SQS service object
-var sqs = new aws.SQS({apiVersion: '2012-11-05'});
 
 const awsQueueUrl = process.env.My_QUEUE;
+const { Op } = require('sequelize');
+const awsRegion = process.env.AWS_REGION;
+aws.config.update({region : awsRegion});
+
+// Create an SQS service object
+var sqs = new aws.SQS({apiVersion: '2012-11-05'});
 
 module.exports = {
     getBillsWhichAreDue(req, res) {
         sdc.increment('get_bill');
         let sDate5 = new Date();
+        let days = req.params.x;
         LOGGER.info("Get bills by ID");
         if (!req.headers.authorization) {
             //if no authrization was done, return with response saying needed authorization
@@ -76,7 +81,11 @@ module.exports = {
                         return Bill
                             .findAll({
                                 where: {
-                                    owner_id: user[0].dataValues.id
+                                    owner_id: user[0].dataValues.id,
+                                    due_date: {
+                                        [Op.lte]: moment().add(days, 'days').toDate(),
+                                        [Op.gte]: moment().format()
+                                    }
                                 },
                                 include: File
 

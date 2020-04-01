@@ -23,7 +23,129 @@ const LOGGER = require("../logger/logger.js");
 const SDC = require('statsd-client');
 const sdc = new SDC({ host: 'localhost', port: 8125 });
 
+// Create an SQS service object
+var sqs = new aws.SQS({apiVersion: '2012-11-05'});
+
+const awsQueueUrl = process.env.My_QUEUE;
+
 module.exports = {
+    getBillsWhichAreDue(req, res) {
+        sdc.increment('get_bill');
+        let sDate5 = new Date();
+        LOGGER.info("Get bills by ID");
+        if (!req.headers.authorization) {
+            //if no authrization was done, return with response saying needed authorization
+            authenticationStatus(res);
+            return;
+        }
+        let authentication = req.headers.authorization.replace(/^Basic/, '');
+
+        authentication = (new Buffer(authentication, 'base64')).toString('utf8');
+        const loginInfo = authentication.split(':');
+        const uName = loginInfo[0];
+        const pswd = loginInfo[1];
+
+        console.log(`Username : ${uName} :: ${pswd}`);
+
+        return User.findAll({
+            limit: 1,
+            where: {
+                email_address: uName
+            }
+
+        })
+            .then((user) => {
+
+                if (user.length == 0) {
+                    return res.status(404).send({
+                        message: 'User not Found! Invalid !',
+
+                    });
+                }
+                console.log(`req.body.password : ${req.body.password} :: user[0].dataValues.password : ${user[0].dataValues.password}`)
+
+                //Check password from header authorization with the database bcrypt encrypted password
+                bcrypt.compare(pswd, user[0].dataValues.password, function (err, res2) {
+                    if (err) {
+                        return res.status(400).send({
+                            message: 'Error occured while comparing passwords.'
+                        })
+                    }
+                    if (res2) {
+                        let sD2 = new Date();
+                        return Bill
+                            .findAll({
+                                where: {
+                                    owner_id: user[0].dataValues.id
+                                },
+                                include: File
+
+                            })
+                            .then((bills) => {
+                                let eD2 = new Date();
+                                let miliseconds2 = (eD2.getTime() - sD2.getTime());
+                                sdc.timing('get_bill_DBQuery_time', miliseconds2);
+
+                                if (bills.length == 0) {
+                                    return res.status(404).send({
+                                        message: 'Bill not found for the user!',
+
+                                    });
+                                }
+                                else {
+                                    bills.forEach(bill => {
+                                        bill.dataValues.created_ts = bill.dataValues.createdAt;
+                                        delete bill.dataValues.createdAt;
+                                        bill.dataValues.updated_ts = bill.dataValues.updatedAt;
+                                        delete bill.dataValues.updatedAt;
+                                        if (bill.dataValues.attachment != null) {
+                                            delete bill.dataValues.attachment.dataValues.size;
+                                            delete bill.dataValues.attachment.dataValues.bill;
+                                            delete bill.dataValues.attachment.dataValues.md5;
+                                        } else {
+                                            bill.dataValues.attachment = null;
+
+                                        }
+
+                                    })
+                                    let messageJSONBody = {
+                                        message : bills,
+                                        email_id : user.dataValues.email_address
+                                    }
+
+                                    //  SQS  Params
+                                    let sqsParams = {
+                                        DelaySeconds: 10,
+                                        MessageBody: JSON.stringify(messageJSONBody),
+                                        QueueUrl: awsQueueUrl
+                                    };
+
+                                    //Send Message to SQS
+                                    sqs.sendMessage(sqsParams, function (err, data) {
+                                        if (err) {
+                                            LOGGER.error("SQS Error : ", err);
+                                        } else {
+                                            LOGGER.debug("SQS Success : ", data.MessageId);
+                                        }
+                                    });
+                                    let eDate5 = new Date();
+                                    let miliseconds5 = (eDate5.getTime() - sDate5.getTime());
+                                    sdc.timing('get_bill_api_time', miliseconds5);
+                                    return res.status(200).send(bills);
+                                }
+
+
+                            })
+
+                    } else {
+                        LOGGER.error({ errors: errors.array() });
+                        return res.status(401).json({ success: false, message: 'Unauthorized! Wrong Password!' });
+                    }
+                });
+            })
+
+            .catch((error) => res.status(400).send(error));
+    },
     createBill(req, res) {
         sdc.increment('create_bill');
         let sDate8 = new Date();

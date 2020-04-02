@@ -29,6 +29,7 @@
     "promise": "^8.0.3",
     "properties-reader": "^1.0.0",
     "sequelize": "^4.1.0",
+    "sqs-consumer": "^5.4.0",
     "statsd-client": "^0.4.4",
     "supertest-chai": "0.0.8"
   },

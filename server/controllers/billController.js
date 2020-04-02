@@ -27,10 +27,36 @@ const sdc = new SDC({ host: 'localhost', port: 8125 });
 const awsQueueUrl = process.env.My_QUEUE;
 const { Op } = require('sequelize');
 const awsRegion = process.env.AWS_REGION;
-aws.config.update({region : awsRegion});
+aws.config.update({ region: awsRegion });
 
 // Create an SQS service object
-var sqs = new aws.SQS({apiVersion: '2012-11-05'});
+var sqs = new aws.SQS({ apiVersion: '2012-11-05' });
+
+//async function that handles the SQS message processing.
+const { Consumer } = require('sqs-consumer');
+const myConsumerApp = Consumer.create({
+    queueUrl: queueURL,
+    handleMessage: async (message) => {
+        LOGGER.debug("Queue Polled Message Body -> " + JSON.parse(message.Body));
+        // LOGGER.debug("Queue Polled Message Attributes -> "+ message.MessageAttributes);
+        // LOGGER.debug("Queue Polled Message Attribute - Author -> "+ message.MessageAttributes.Author);
+    },
+    sqs: new aws.SQS()
+});
+
+myConsumerApp.on('error', (err) => {
+    LOGGER.error("Queue Polling error -> " + err.message);
+});
+
+myConsumerApp.on('processing_error', (err) => {
+    LOGGER.error("Queue Polling processing_error -> " + err.message);
+});
+
+myConsumerApp.on('timeout_error', (err) => {
+    LOGGER.error("Queue Polling timeout_error -> " + err.message);
+});
+
+myConsumerApp.start();
 
 module.exports = {
     getBillsWhichAreDue(req, res) {
@@ -118,8 +144,8 @@ module.exports = {
 
                                     })
                                     let messageJSONBody = {
-                                        message : bills,
-                                        email_id : user.dataValues.email_address
+                                        message: bills,
+                                        email_id: user.dataValues.email_address
                                     }
 
                                     //  SQS  Params

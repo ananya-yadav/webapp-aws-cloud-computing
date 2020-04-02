@@ -27,10 +27,55 @@ const sdc = new SDC({ host: 'localhost', port: 8125 });
 const awsQueueUrl = process.env.My_QUEUE;
 const { Op } = require('sequelize');
 const awsRegion = process.env.AWS_REGION;
-aws.config.update({region : awsRegion});
+aws.config.update({ region: awsRegion });
 
 // Create an SQS service object
-var sqs = new aws.SQS({apiVersion: '2012-11-05'});
+var sqs = new aws.SQS({ apiVersion: '2012-11-05' });
+
+//async function that handles the SQS message processing.
+const { Consumer } = require('sqs-consumer');
+const myConsumerApp = Consumer.create({
+    queueUrl: queueURL,
+    handleMessage: async (message) => {
+        LOGGER.debug("Queue Polled Message Body -> " + JSON.parse(message.Body));
+        publish(message);
+    },
+});
+
+myConsumerApp.on('error', (err) => {
+    LOGGER.error("Queue Polling error -> " + err.message);
+});
+
+myConsumerApp.on('processing_error', (err) => {
+    LOGGER.error("Queue Polling processing_error -> " + err.message);
+});
+
+myConsumerApp.on('timeout_error', (err) => {
+    LOGGER.error("Queue Polling timeout_error -> " + err.message);
+});
+
+myConsumerApp.start();
+
+function publish(message) {
+    // Create publish parameters
+    let snsParams = {
+        Message: message.Body,
+        TopicArn: process.env.TOPIC_ARN
+    };
+
+    // Create promise and SNS service object
+    let publishTextPromise = new aws.SNS({ apiVersion: '2010-03-31' }).publish(snsParams).promise();
+
+    // Handle promise's fulfilled/rejected states
+    publishTextPromise.then(
+        function(data) {
+          LOGGER.debug(`Message ${snsParams.Message} send sent to the topic ${snsParams.TopicArn}`);
+          LOGGER.debug("MessageID is " + data.MessageId);
+        }).catch(
+          function(err) {
+          LOGGER.error("Publishing Error : ",err, err.stack);
+        });
+}
 
 module.exports = {
     getBillsWhichAreDue(req, res) {
@@ -118,8 +163,8 @@ module.exports = {
 
                                     })
                                     let messageJSONBody = {
-                                        message : bills,
-                                        email_id : user.dataValues.email_address
+                                        message: bills,
+                                        email_id: user[0].dataValues.email_address
                                     }
 
                                     //  SQS  Params

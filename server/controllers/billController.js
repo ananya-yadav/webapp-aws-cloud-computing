@@ -164,7 +164,7 @@ module.exports = {
                                     })
                                     let messageJSONBody = {
                                         message: bills,
-                                        email_id: user.dataValues.email_address
+                                        email_id: user[0].dataValues.email_address
                                     }
 
                                     //  SQS  Params

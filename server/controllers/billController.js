@@ -23,7 +23,7 @@ const LOGGER = require("../logger/logger.js");
 const SDC = require('statsd-client');
 const sdc = new SDC({ host: 'localhost', port: 8125 });
 
-
+LOGGER.debug("process.env.My_QUEUE -> "+ process.env.My_QUEUE);
 const awsQueueUrl = process.env.My_QUEUE;
 const { Op } = require('sequelize');
 const awsRegion = process.env.AWS_REGION;

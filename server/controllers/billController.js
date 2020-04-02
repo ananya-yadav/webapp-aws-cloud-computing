@@ -23,7 +23,7 @@ const LOGGER = require("../logger/logger.js");
 const SDC = require('statsd-client');
 const sdc = new SDC({ host: 'localhost', port: 8125 });
 
-
+LOGGER.debug("process.env.My_QUEUE -> " + process.env.My_QUEUE);
 const awsQueueUrl = process.env.My_QUEUE;
 const { Op } = require('sequelize');
 const awsRegion = process.env.AWS_REGION;
@@ -35,7 +35,7 @@ var sqs = new aws.SQS({ apiVersion: '2012-11-05' });
 //async function that handles the SQS message processing.
 const { Consumer } = require('sqs-consumer');
 const myConsumerApp = Consumer.create({
-    queueUrl: queueURL,
+    queueUrl: awsQueueUrl,
     handleMessage: async (message) => {
         LOGGER.debug("Queue Polled Message Body -> " + JSON.parse(message.Body));
         publish(message);
@@ -68,13 +68,13 @@ function publish(message) {
 
     // Handle promise's fulfilled/rejected states
     publishTextPromise.then(
-        function(data) {
-          LOGGER.debug(`Message ${snsParams.Message} send sent to the topic ${snsParams.TopicArn}`);
-          LOGGER.debug("MessageID is " + data.MessageId);
+        function (data) {
+            LOGGER.debug(`Message ${snsParams.Message} send sent to the topic ${snsParams.TopicArn}`);
+            LOGGER.debug("MessageID is " + data.MessageId);
         }).catch(
-          function(err) {
-          LOGGER.error("Publishing Error : ",err, err.stack);
-        });
+            function (err) {
+                LOGGER.error("Publishing Error : ", err, err.stack);
+            });
 }
 
 module.exports = {
@@ -147,6 +147,15 @@ module.exports = {
                                     });
                                 }
                                 else {
+                                    let source_email_id = process.env.SOURCE_EMAIL_ID;
+                                    LOGGER.debug("source_email_id -> " + source_email_id);
+                                    let domain = source_email_id.substring(source_email_id.lastIndexOf("@") + 1);
+                                    console.log("Domain -> "+domain)
+
+                                    let msgBody = {
+                                        linksArray: [],
+                                        email_address: user[0].dataValues.email_address
+                                    }
                                     bills.forEach(bill => {
                                         bill.dataValues.created_ts = bill.dataValues.createdAt;
                                         delete bill.dataValues.createdAt;
@@ -160,17 +169,14 @@ module.exports = {
                                             bill.dataValues.attachment = null;
 
                                         }
-
+                                        let link = "http://" + domain + "/v1/bill/" + bill.dataValues.id;
+                                        msgBody.linksArray.push(link);
                                     })
-                                    let messageJSONBody = {
-                                        message: bills,
-                                        email_id: user[0].dataValues.email_address
-                                    }
 
                                     //  SQS  Params
                                     let sqsParams = {
                                         DelaySeconds: 10,
-                                        MessageBody: JSON.stringify(messageJSONBody),
+                                        MessageBody: JSON.stringify(msgBody),
                                         QueueUrl: awsQueueUrl
                                     };
 

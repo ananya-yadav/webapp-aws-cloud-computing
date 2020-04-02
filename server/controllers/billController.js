@@ -35,7 +35,7 @@ var sqs = new aws.SQS({ apiVersion: '2012-11-05' });
 //async function that handles the SQS message processing.
 const { Consumer } = require('sqs-consumer');
 const myConsumerApp = Consumer.create({
-    queueUrl: queueURL,
+    queueUrl: awsQueueUrl,
     handleMessage: async (message) => {
         LOGGER.debug("Queue Polled Message Body -> " + JSON.parse(message.Body));
         publish(message);

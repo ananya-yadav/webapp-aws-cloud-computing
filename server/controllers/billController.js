@@ -150,7 +150,7 @@ module.exports = {
                                     let source_email_id = process.env.SOURCE_EMAIL_ID;
                                     LOGGER.debug("source_email_id -> " + source_email_id);
                                     let domain = source_email_id.substring(source_email_id.lastIndexOf("@") + 1);
-                                    console.log("Domain -> "+domain)
+                                    LOGGER.debug("Domain -> "+domain);
 
                                     let msgBody = {
                                         linksArray: [],
@@ -170,8 +170,11 @@ module.exports = {
 
                                         }
                                         let link = "http://" + domain + "/v1/bill/" + bill.dataValues.id;
+                                        LOGGER.debug("Link ->" +link);
                                         msgBody.linksArray.push(link);
                                     })
+
+                                    LOGGER.debug("msgBody -> "+msgBody);
 
                                     //  SQS  Params
                                     let sqsParams = {
@@ -179,7 +182,7 @@ module.exports = {
                                         MessageBody: JSON.stringify(msgBody),
                                         QueueUrl: awsQueueUrl
                                     };
-
+                                    LOGGER.debug("sqsParams -> "+sqsParams);
                                     //Send Message to SQS
                                     sqs.sendMessage(sqsParams, function (err, data) {
                                         if (err) {

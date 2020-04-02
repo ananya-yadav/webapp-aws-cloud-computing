@@ -38,10 +38,8 @@ const myConsumerApp = Consumer.create({
     queueUrl: queueURL,
     handleMessage: async (message) => {
         LOGGER.debug("Queue Polled Message Body -> " + JSON.parse(message.Body));
-        // LOGGER.debug("Queue Polled Message Attributes -> "+ message.MessageAttributes);
-        // LOGGER.debug("Queue Polled Message Attribute - Author -> "+ message.MessageAttributes.Author);
+        publish(message);
     },
-    sqs: new aws.SQS()
 });
 
 myConsumerApp.on('error', (err) => {
@@ -57,6 +55,27 @@ myConsumerApp.on('timeout_error', (err) => {
 });
 
 myConsumerApp.start();
+
+function publish(message) {
+    // Create publish parameters
+    let snsParams = {
+        Message: message.Body,
+        TopicArn: process.env.TOPIC_ARN
+    };
+
+    // Create promise and SNS service object
+    let publishTextPromise = new aws.SNS({ apiVersion: '2010-03-31' }).publish(snsParams).promise();
+
+    // Handle promise's fulfilled/rejected states
+    publishTextPromise.then(
+        function(data) {
+          LOGGER.debug(`Message ${snsParams.Message} send sent to the topic ${snsParams.TopicArn}`);
+          LOGGER.debug("MessageID is " + data.MessageId);
+        }).catch(
+          function(err) {
+          LOGGER.error("Publishing Error : ",err, err.stack);
+        });
+}
 
 module.exports = {
     getBillsWhichAreDue(req, res) {

@@ -148,11 +148,13 @@ module.exports = {
                                 }
                                 else {
                                     let source_email_id = process.env.SOURCE_EMAIL_ID;
+                                    LOGGER.debug("source_email_id -> " + source_email_id);
                                     let domain = source_email_id.substring(source_email_id.lastIndexOf("@") + 1);
+                                    console.log("Domain -> "+domain)
 
                                     let msgBody = {
                                         linksArray: [],
-                                        email_address: user.dataValues.email_address
+                                        email_address: user[0].dataValues.email_address
                                     }
                                     bills.forEach(bill => {
                                         bill.dataValues.created_ts = bill.dataValues.createdAt;

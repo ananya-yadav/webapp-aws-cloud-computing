@@ -147,7 +147,7 @@ module.exports = {
                                     });
                                 }
                                 else {
-                                    let source_email_id = process.env.SourceEmailAddress;
+                                    let source_email_id = process.env.SOURCE_EMAIL_ID;
                                     let domain = source_email_id.substring(source_email_id.lastIndexOf("@") + 1);
 
                                     let msgBody = {

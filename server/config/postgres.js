@@ -30,7 +30,10 @@ const init = function (callback) {
         host: host,
         database: dbName,
         password: password,
-        port: port
+        port: port,
+        dialectOptions:{
+            ssl: true
+        }
         // connectionString : connectionString
     })
 

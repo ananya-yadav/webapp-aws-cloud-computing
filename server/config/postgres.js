@@ -6,12 +6,10 @@ const password = process.env.DB_PASSWORD;
 const host = process.env.DB_HOST;
 const dbName = process.env.DB_NAME;
 const port = process.env.DB_PORT;
+const fs = require('fs');
+const location = process.env.CERT_DIR;
+const certificate = fs.readFileSync( location + "rds-combined-ca-bundle.pem");
 
-// const username = 'postgres';
-// const password = 'Qwe1Asd2Zxc3';
-// const host = 'localhost';
-// const dbName = 'cloudassignment';
-// const port = 5432;
 var sequelize = new Sequelize(dbName, username, password,
     {
         host: host,
@@ -22,7 +20,6 @@ var sequelize = new Sequelize(dbName, username, password,
     }
 
 );
-const connectionString = 'postgres://' + username + ':' + password + '@' + host + '/postgres';
 
 const init = function (callback) {
     const client = new Client({
@@ -30,8 +27,13 @@ const init = function (callback) {
         host: host,
         database: dbName,
         password: password,
-        port: port
-        // connectionString : connectionString
+        port: port,
+        dialectOptions: {
+            ssl: {
+                rejectUnauthorized: true,
+                ca: [certificate]
+            }
+        }
     })
 
     client.connect();
